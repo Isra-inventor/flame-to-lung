@@ -3,7 +3,7 @@
     "id": "same",
     "title": "SAME: Smoke Aerosol Measurement Experiment",
     "psi_id": "PSI-102",
-    "stage": "soot",
+    "stage": "overheating",
     "table": "same",
     "what": "Spacecraft materials (Kapton, silicone rubber, cotton lampwick, Teflon, Pyrell foam, and liquid DBP) were overheated on the ISS and the smoke particles were measured with three instruments.",
     "findings": [

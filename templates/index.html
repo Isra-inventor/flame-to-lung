@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flame to Lung</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <canvas id="space" aria-hidden="true"></canvas>
+
+  <!-- ==================== CHAPTER RAIL ==================== -->
+  <nav class="rail" aria-label="Chapters">
+    <a href="#top" class="rail-mark">F→L</a>
+    <a href="#lifecycle" data-nav="lifecycle"><i>01</i><span>Lifecycle</span></a>
+    <a href="#materials" data-nav="materials"><i>02</i><span>Materials</span></a>
+    <a href="#exposure" data-nav="exposure"><i>03</i><span>Crew exposure</span></a>
+    <a href="#aging" data-nav="aging"><i>04</i><span>Smoke aging</span></a>
+    <a href="#assistant" data-nav="assistant"><i>05</i><span>Assistant</span></a>
+  </nav>
+
+  <main>
+    <!-- ==================== HERO ==================== -->
+    <section id="top" class="hero" data-scene="hero">
+      <p class="kicker">NASA Space Apps 2026 · Flame in Freefall</p>
+      <h1>Flame<br><em>to</em> Lung</h1>
+      <p class="lede">In orbit a flame is a slow blue sphere, and its smoke never rises.
+        We follow decades of NASA microgravity fire experiments from the first overheated wire
+        to the air a crew member breathes.</p>
+      <dl class="telemetry">
+        <div><dt>smoke runs</dt><dd>{{ counts.same }}</dd><small>SAME · PSI-101</small></div>
+        <div><dt>droplet burns</dt><dd>{{ counts.flex }}</dd><small>FLEX · PSI-69</small></div>
+        <div><dt>solid-fuel tests</dt><dd>{{ counts.bass + counts.bass2 }}</dd><small>BASS, BASS-II · PSI-26, 25</small></div>
+        <div><dt>large-fire samples</dt><dd>{{ counts.saffire }}</dd><small>Saffire · PSI-98–100</small></div>
+      </dl>
+      <a class="scroll-cue" href="#lifecycle">scroll to follow the smoke ↓</a>
+    </section>
+
+    <!-- ==================== 01 LIFECYCLE ==================== -->
+    <section id="lifecycle" data-scene="lifecycle">
+      <header class="chapter"><span>01</span><h2>A fire has <em>a life</em></h2>
+        <p>Each NASA investigation studied one moment of it. Pick a stage.</p></header>
+      <div class="stages" role="tablist">
+        {% for s in stages %}<button role="tab" data-stage="{{ s }}"><i>{{ loop.index }}</i>{{ s }}</button>{% endfor %}
+      </div>
+      <div id="cards" class="cards"></div>
+    </section>
+
+    <!-- ==================== 02 MATERIALS ==================== -->
+    <section id="materials" data-scene="materials">
+      <header class="chapter"><span>02</span><h2>Two rankings that <em>disagree</em></h2>
+        <p>Will it burn, and what does its smoke do in a lung? NASA tested different materials for each question.</p></header>
+      <div class="matrix-wrap">
+        <table id="matrix" class="matrix"></table>
+        <p class="note"><span class="swatch gap"></span> hatched = no data in these NASA datasets. Each gap is a test NASA could fly next.</p>
+      </div>
+      <div class="two">
+        <figure><figcaption>Share of inhaled particles reaching the alveoli <b class="tag modeled">Modeled</b></figcaption>
+          <div id="rank-count" class="plot short"></div></figure>
+        <figure><figcaption>Smoke mass deposited in 10 min at source concentration, at rest <b class="tag modeled">Modeled</b></figcaption>
+          <div id="rank-mass" class="plot short"></div></figure>
+      </div>
+      <p class="source">Smoke: SAME, PSI-101. Burn outcomes: BASS PSI-26 (keyword reading of crew notes), Saffire PSI-98/99/100. Deposition: ICRP 66 / Hinds 1999.</p>
+    </section>
+
+    <!-- ==================== 03 CREW EXPOSURE ==================== -->
+    <section id="exposure" data-scene="exposure">
+      <header class="chapter"><span>03</span><h2>What the crew <em>breathes</em></h2>
+        <p>Choose a material and a scenario. The lung lights up where the smoke lands.</p></header>
+      <div class="split">
+        <div>
+          <div class="lung-space"></div>
+          <ul id="regions" class="regions"></ul>
+        </div>
+        <div class="panel">
+          <div class="control"><label>Overheating material</label><div class="seg" data-key="material">
+            {% for m in materials %}<button data-v="{{ m }}">{{ m }}</button>{% endfor %}</div></div>
+          <div class="control"><label>Cabin dilution <small>scenario input: cabin ÷ measured source concentration</small></label><div class="seg" data-key="dilution">
+            <button data-v="1">source</button><button data-v="0.1">1/10</button><button data-v="0.01">1/100</button><button data-v="0.001">1/1000</button></div></div>
+          <div class="control"><label>Minutes since release <output id="minutes-out">0</output></label>
+            <input id="minutes" type="range" min="0" max="30" value="0"></div>
+          <div class="control"><label>Activity</label><div class="seg" data-key="activity">
+            <button data-v="rest">rest</button><button data-v="light">light work</button><button data-v="heavy">heavy work</button></div></div>
+          <div class="control"><label>Gravity</label><div class="seg" data-key="gravity">
+            <button data-v="1g">Earth</button><button data-v="lunar">Moon</button><button data-v="microgravity">orbit</button></div></div>
+          <div class="readout">
+            <div><dt>particles reaching alveoli</dt><dd id="r-count">–</dd><small>per minute <b class="tag modeled">Modeled</b></small></div>
+            <div><dt>mass deposited</dt><dd id="r-mass">–</dd><small>µg per 10 minutes <b class="tag modeled">Modeled</b></small></div>
+          </div>
+          <p id="r-band" class="note"></p>
+        </div>
+      </div>
+      <figure><figcaption>Where each particle size lands, and the sizes in this smoke <b class="tag modeled">Modeled</b></figcaption>
+        <div id="curve" class="plot"></div></figure>
+      <p class="source" id="r-source"></p>
+    </section>
+
+    <!-- ==================== 04 SMOKE AGING ==================== -->
+    <section id="aging" data-scene="aging">
+      <header class="chapter"><span>04</span><h2>Smoke <em>grows old</em></h2>
+        <p>Particles collide and stick. Fewer, larger particles means a different dose. Dense smoke ages fast; diluted smoke barely changes.</p></header>
+      <div class="split">
+        <div class="lung-space"></div>
+        <div class="panel">
+          <div class="control"><label>Material</label><div class="seg" data-key="agingMaterial">
+            {% for m in materials %}<button data-v="{{ m }}">{{ m }}</button>{% endfor %}</div></div>
+          <div class="control"><label>Concentration</label><div class="seg" data-key="agingDilution">
+            <button data-v="1">source</button><button data-v="0.1">1/10</button><button data-v="0.01">1/100</button></div></div>
+          <div class="control"><label>Minutes <output id="age-out">0</output></label>
+            <input id="age" type="range" min="0" max="30" value="0"></div>
+          <div class="readout three">
+            <div><dt>particle size</dt><dd id="a-gmd">–</dd><small>µm, geometric mean</small></div>
+            <div><dt>particles left</dt><dd id="a-n">–</dd><small>of the starting count</small></div>
+            <div><dt>reaching alveoli</dt><dd id="a-al">–</dd><small>of inhaled particles</small></div>
+          </div>
+        </div>
+      </div>
+      <figure><figcaption>Thirty minutes of drifting smoke <b class="tag modeled">Modeled</b></figcaption>
+        <div id="age-plot" class="plot"></div></figure>
+      <p class="source">Coagulation coefficient fitted to {{ aging.n_pairs }} fresh/aged SAME pairs (PSI-101):
+        K = {{ '%.1e' % aging.K_pooled_cm3_s }} cm³/s pooled. Leave-one-out error: particle count
+        {{ '%.0f' % aging.validation.number_conc_mean_abs_pct_error }}%, size
+        {{ '%.3f' % aging.validation.gmd_mae_um_volume_conserving }} µm. {{ aging.note }}</p>
+    </section>
+
+    <!-- ==================== 05 ASSISTANT ==================== -->
+    <section id="assistant" data-scene="assistant">
+      <header class="chapter"><span>05</span><h2>Ask <em>the data</em></h2>
+        <p>The language model may only quote numbers returned by the tools: NASA tables and the physics engine.</p></header>
+      <div class="chips">{% for q in questions %}<button>{{ q }}</button>{% endfor %}</div>
+      <div id="chat" class="chat" aria-live="polite"></div>
+      <form id="ask" class="ask">
+        <input id="question" autocomplete="off" placeholder="A wire is overheating in the lab module…" aria-label="Your question">
+        <button>Ask</button>
+      </form>
+    </section>
+
+    <footer>
+      <p>Data: NASA Physical Sciences Informatics (PSI-25, 26, 69, 98–102). Models: ICRP Publication 66, Hinds 1999, Darquenne &amp; Prisk 2008.
+        Deposition is not toxicity; gases are not modelled. Not endorsed by NASA.</p>
+    </footer>
+  </main>
+
+  <script src="/static/vendor/plotly-basic.min.js"></script>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

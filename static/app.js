@@ -1,0 +1,313 @@
+import * as THREE from "/static/vendor/three.module.min.js";
+
+const $ = (s, root = document) => root.querySelector(s);
+const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+const post = (url, body) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
+const REGION = { HA: ["Head airways", "#3987e5"], TB: ["Bronchi", "#d95926"], AL: ["Alveoli", "#199e70"] };
+const INK = "#eef0f2", INK2 = "#a9b0ba", GRID = "rgba(238,240,242,.07)";
+const pct = x => (100 * x).toFixed(1) + "%";
+const big = x => x >= 1e9 ? (x / 1e9).toFixed(1) + " billion" : x >= 1e6 ? (x / 1e6).toFixed(1) + " million" : Math.round(x).toLocaleString();
+const sig = (x, n = 3) => Number(x.toPrecision(n)).toString();
+
+// ==================== 3D SCENE: FLAME, SMOKE, LUNG ====================
+const scene3d = (() => {
+  const canvas = $("#space");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x06080c);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  camera.position.z = 9;
+
+  const vertex = `
+    attribute vec3 color; attribute float size; attribute float seed; attribute float region;
+    uniform float uTime, uOpacity, uPx, uWobble, uDrift, uGrow; uniform vec3 uLevels;
+    varying vec3 vColor; varying float vAlpha;
+    void main() {
+      float level = region < 0.5 ? uLevels.x : region < 1.5 ? uLevels.y : region < 2.5 ? uLevels.z : 1.0;
+      vec3 p = position * (1.0 + uWobble * sin(uTime * 1.7 + seed * 40.0));
+      p.x = mix(p.x, mod(p.x + uTime * uDrift * (0.4 + seed) + 12.0, 24.0) - 12.0, step(0.0001, uDrift));
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = size * uGrow * uPx * 3.4 * (0.6 + 0.8 * level) / -mv.z;
+      vAlpha = uOpacity * (0.16 + 0.84 * level) * (0.72 + 0.28 * sin(uTime * 1.3 + seed * 60.0));
+      vColor = color;
+    }`;
+  const fragment = `
+    varying vec3 vColor; varying float vAlpha;
+    void main() {
+      float glow = smoothstep(0.5, 0.0, length(gl_PointCoord - 0.5));
+      gl_FragColor = vec4(vColor, glow * glow * vAlpha);
+    }`;
+
+  function cloud(points, extra = {}) {
+    const geo = new THREE.BufferGeometry();
+    const attr = (name, n, pick) => geo.setAttribute(name, new THREE.Float32BufferAttribute(points.flatMap(pick), n));
+    attr("position", 3, p => p.pos); attr("color", 3, p => p.color);
+    attr("size", 1, p => [p.size]); attr("seed", 1, () => [Math.random()]); attr("region", 1, p => [p.region ?? 3]);
+    const uniforms = { uTime: { value: 0 }, uOpacity: { value: 1 }, uPx: { value: 1 }, uWobble: { value: 0 },
+      uDrift: { value: 0 }, uGrow: { value: 1 }, uLevels: { value: new THREE.Vector3(.3, .3, .3) } };
+    Object.entries(extra).forEach(([k, v]) => uniforms[k].value = v);
+    const mesh = new THREE.Points(geo, new THREE.ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    mesh.frustumCulled = false;
+    scene.add(mesh);
+    return mesh;
+  }
+
+  const rgb = hex => new THREE.Color(hex).toArray();
+  const rand = (a = 1) => (Math.random() - 0.5) * 2 * a;
+  const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+
+  // ---------- flame: a blue sphere, the shape fire takes without gravity ----------
+  const flamePoints = [];
+  for (let i = 0; i < 5200; i++) {
+    const r = Math.random() < 0.55 ? 0.95 + gauss() * 0.12 : Math.pow(Math.random(), 0.5) * 1.3;
+    const u = rand(), t = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+    const color = r < 0.35 ? rgb("#f2f7ff") : r < 0.85 ? rgb("#3f8cff") : r < 1.12 ? rgb("#2748e8") : rgb("#b0621c");
+    flamePoints.push({ pos: [r * s * Math.cos(t), r * u, r * s * Math.sin(t)], color, size: r < 0.35 ? 26 : r < 1.12 ? 15 : 6 });
+  }
+  const flame = cloud(flamePoints, { uWobble: 0.035 });
+
+  // ---------- smoke: drifting soot particles ----------
+  const smokePoints = Array.from({ length: 1500 }, () => ({ pos: [rand(12), rand(5), rand(4) - 1], color: rgb("#8d8478"), size: 5 + Math.random() * 9 }));
+  const smoke = cloud(smokePoints, { uDrift: 0.12, uOpacity: 0.55 });
+
+  // ---------- lung: a branching airway tree with alveoli at the tips ----------
+  const lungPoints = [];
+  const along = (a, b, n, spread, color, size, region) => {
+    for (let i = 0; i < n; i++) {
+      const k = Math.random();
+      lungPoints.push({ pos: [0, 1, 2].map(j => a[j] + (b[j] - a[j]) * k + gauss() * spread), color, size, region });
+    }
+  };
+  along([0.5, 2.75, 0.25], [0, 2.5, 0], 150, 0.05, rgb(REGION.HA[1]), 13, 0);
+  along([0, 2.5, 0], [0, 1.55, 0], 320, 0.05, rgb(REGION.HA[1]), 13, 0);
+  function branch(from, dir, length, depth) {
+    const to = from.map((v, j) => v + dir[j] * length);
+    along(from, to, Math.max(14, 90 - depth * 12), 0.012 + 0.006 * (7 - depth), rgb(REGION.TB[1]), 12 - depth * 0.7, 1);
+    const sacs = depth === 7 ? 34 : depth >= 3 ? 26 : 0;
+    for (let i = 0; i < sacs; i++) lungPoints.push({ pos: to.map(v => v + gauss() * (0.16 + 0.03 * (7 - depth))), color: rgb(REGION.AL[1]), size: 7.5, region: 2 });
+    if (depth === 7) return;
+    for (const sign of [-1, 1]) {
+      const a = sign * (0.4 + rand(0.1)), c = Math.cos(a), k = Math.sin(a);
+      const turn = depth % 2 ? [dir[0], dir[1] * c - dir[2] * k, dir[1] * k + dir[2] * c] : [dir[0] * c - dir[1] * k, dir[0] * k + dir[1] * c, dir[2]];
+      turn[1] -= 0.08; turn[0] *= 0.9;
+      const norm = Math.hypot(...turn);
+      branch(to, turn.map(v => v / norm), length * 0.8, depth + 1);
+    }
+  }
+  along([0, 1.55, 0], [0, 0.95, 0], 160, 0.035, rgb(REGION.TB[1]), 14, 1);
+  branch([0, 0.95, 0], [-0.55, -0.83, 0], 0.62, 1);
+  branch([0, 0.95, 0], [0.55, -0.83, 0], 0.62, 1);
+  const lung = cloud(lungPoints);
+  lung.geometry.translate(0, -0.55, 0);
+
+  // ---------- where things sit for each chapter (x, y as share of the visible area) ----------
+  const POSES = {
+    hero:      { flame: [0.23, 0.0, 1.3, 1], lung: [-0.2, 0, 0.7, 0] },
+    lifecycle: { flame: [0.37, 0.3, 0.5, 0.5], lung: [-0.2, 0, 0.7, 0] },
+    materials: { flame: [0.44, 0.4, 0.22, 0.12], lung: [-0.2, 0, 0.8, 0] },
+    exposure:  { flame: [0.46, 0.42, 0.16, 0.2], lung: [-0.19, -0.05, 0.8, 1] },
+    aging:     { flame: [0.46, 0.42, 0.16, 0.2], lung: [-0.19, -0.05, 0.8, 0.85] },
+    assistant: { flame: [0.4, -0.3, 0.4, 0.3], lung: [0.3, 0.05, 0.85, 0.16] },
+  };
+  let pose = POSES.hero, pointer = [0, 0], anchor = null;
+  const now = { flame: [...pose.flame], lung: [...pose.lung] };
+  const levels = new THREE.Vector3(0.3, 0.3, 0.3), levelTarget = levels.clone();
+  let grow = 1;
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function resize() {
+    renderer.setSize(innerWidth, innerHeight, false);
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  addEventListener("resize", resize);
+  addEventListener("pointermove", e => pointer = [e.clientX / innerWidth - 0.5, e.clientY / innerHeight - 0.5]);
+  resize();
+
+  function frame(ms) {
+    const t = ms / 1000;
+    const viewH = 2 * Math.tan(THREE.MathUtils.degToRad(20)) * camera.position.z, viewW = viewH * camera.aspect;
+    const narrow = innerWidth < 900;
+    for (const [name, mesh] of [["flame", flame], ["lung", lung]]) {
+      const target = pose[name], cur = now[name];
+      for (let i = 0; i < 4; i++) cur[i] += (target[i] - cur[i]) * 0.06;
+      const box = name === "lung" && anchor ? anchor.getBoundingClientRect() : null;
+      if (box) {
+        mesh.position.set(((box.left + box.width / 2) / innerWidth - 0.5) * viewW, -((box.top + box.height / 2) / innerHeight - 0.5) * viewH, 0);
+        mesh.scale.setScalar(Math.min(box.height / innerHeight * viewH / 4.9, box.width / innerWidth * viewW / 4.2));
+      } else {
+        mesh.position.set((narrow && name === "lung" ? 0 : cur[0]) * viewW, cur[1] * viewH, 0);
+        mesh.scale.setScalar(cur[2] * (name === "lung" ? Math.min(1, viewH / 6.4) : Math.min(1.1, viewW / 9)));
+      }
+      mesh.material.uniforms.uOpacity.value = cur[3];
+      mesh.visible = cur[3] > 0.01;
+    }
+    levels.lerp(levelTarget, 0.08);
+    lung.material.uniforms.uLevels.value.copy(levels);
+    smoke.material.uniforms.uGrow.value += (grow - smoke.material.uniforms.uGrow.value) * 0.08;
+    lung.rotation.y = (still ? 0.35 : Math.sin(t * 0.25) * 0.55) + pointer[0] * 0.5;
+    lung.rotation.x = pointer[1] * 0.15;
+    flame.rotation.y = still ? 0 : t * 0.12;
+    flame.rotation.x = pointer[1] * 0.3;
+    for (const mesh of [flame, smoke, lung]) {
+      mesh.material.uniforms.uTime.value = still ? 0 : t;
+      mesh.material.uniforms.uPx.value = renderer.getPixelRatio() * innerHeight / 900;
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  return {
+    setPose: (name, section) => { pose = POSES[name] || pose; anchor = section.querySelector(".lung-space"); },
+    setDeposition: f => levelTarget.set(...["HA", "TB", "AL"].map(k => Math.min(1, Math.sqrt(f[k] / 0.3)))),
+    setSmokeSize: ratio => grow = ratio,
+  };
+})();
+
+// ==================== CHAPTER TRACKING ====================
+const watcher = new IntersectionObserver(entries => entries.forEach(e => {
+  if (!e.isIntersecting) return;
+  scene3d.setPose(e.target.dataset.scene, e.target);
+  $$(".rail a[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === e.target.id));
+}), { rootMargin: "-45% 0px -45% 0px" });
+$$("section[data-scene]").forEach(s => watcher.observe(s));
+
+// ==================== CHART STYLE ====================
+const axis = extra => ({ gridcolor: GRID, linecolor: "rgba(238,240,242,.25)", zeroline: false, ticks: "outside", ticklen: 4, tickcolor: "rgba(238,240,242,.25)", ...extra });
+const layout = extra => ({ paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)", font: { family: "Plex Mono, monospace", size: 11, color: INK2 },
+  margin: { l: 64, r: 28, t: 34, b: 48 }, hoverlabel: { bgcolor: "#0d1117", bordercolor: "#3a424e", font: { family: "Plex Mono, monospace", color: INK } },
+  legend: { orientation: "h", y: 1.09, x: 0, font: { color: INK2 } }, ...extra });
+const draw = (id, traces, lay) => Plotly.react(id, traces, layout(lay), { displayModeBar: false, responsive: true });
+const label = (x, y, text, extra = {}) => ({ x, y, text, showarrow: false, font: { color: INK, size: 11 }, yshift: 12, ...extra });
+
+// ==================== 01 LIFECYCLE ====================
+const cards = await fetch("/api/cards").then(r => r.json());
+function showStage(stage) {
+  $$(".stages button").forEach(b => b.setAttribute("aria-selected", b.dataset.stage === stage));
+  $("#cards").innerHTML = cards.filter(c => c.stage === stage).map(c => `
+    <article class="card">
+      <span class="id">${c.psi_id || "MODEL"}</span>
+      <h3>${c.title}</h3>
+      <p>${c.what}</p>
+      <ul>${c.findings.map(f => `<li>${f}</li>`).join("")}</ul>
+      <p class="meaning">${c.safety_meaning}</p>
+      <small>${c.sources.join(" · ")}</small>
+    </article>`).join("");
+}
+$$(".stages button").forEach(b => b.onclick = () => showStage(b.dataset.stage));
+showStage("overheating");
+
+// ==================== 02 MATERIALS ====================
+const matrix = await fetch("/api/matrix").then(r => r.json());
+function fireCell(f) {
+  if (!f) return `<td class="gap">NO DATA</td>`;
+  const lines = [];
+  if (f.bass_tests) {
+    const total = Object.values(f.bass_tests).reduce((a, b) => a + b, 0);
+    lines.push(`<b>BASS: ${f.bass_tests.burned || 0} of ${total} tests burned</b>`);
+  }
+  if (f.saffire_samples) lines.push(`Saffire: ${f.saffire_samples} samples` + (f.saffire_ug_burn_length.length ? `, burn length in orbit ${f.saffire_ug_burn_length.join("; ")}` : ""));
+  return `<td>${lines.join("")} <small>${f.source}</small></td>`;
+}
+const smokeCell = s => s ? `<td><b>${sig(s.gmd_um, 2)} µm particles</b>${sig(s.mass_mg_m3, 3)} mg/m³ at the source, ${s.n_runs} runs <small>${s.source}</small></td>` : `<td class="gap">NO DATA</td>`;
+const names = Object.keys(matrix.materials).sort((a, b) => Object.keys(matrix.materials[b]).length - Object.keys(matrix.materials[a]).length);
+$("#matrix").innerHTML = `<tr><th>Material</th><th>Does it burn in microgravity? <b class="tag measured">Measured</b></th><th>What is its smoke like? <b class="tag measured">Measured</b></th></tr>` +
+  names.map(n => `<tr><td>${n}</td>${fireCell(matrix.materials[n].fire)}${smokeCell(matrix.materials[n].smoke)}</tr>`).join("");
+
+function rankBars(id, order, value, format, unit) {
+  const names = [...order].reverse(), x = names.map(n => value(matrix.materials[n].smoke));
+  draw(id, [{ type: "bar", orientation: "h", y: names, x, width: 0.5, marker: { color: "#3987e5" }, text: x.map(format), textposition: "outside",
+    textfont: { color: INK }, cliponaxis: false, hovertemplate: "%{y}: %{text}<extra></extra>" }],
+    { barcornerradius: 4, margin: { l: 96, r: 70, t: 8, b: 40 }, showlegend: false, xaxis: axis({ title: { text: unit }, rangemode: "tozero" }), yaxis: axis({ ticks: "", tickfont: { color: INK, size: 12 } }) });
+}
+rankBars("rank-count", matrix.rank_alveolar_fraction, s => 100 * s.alveolar_fraction_by_count, v => v.toFixed(1) + "%", "% of inhaled particles");
+rankBars("rank-mass", matrix.rank_mass_dose, s => s.mass_deposited_ug_per_10min, v => big(v) + " µg", "µg per 10 min");
+
+// ==================== 03 CREW EXPOSURE ====================
+const state = { material: "Kapton", dilution: "0.01", activity: "rest", gravity: "microgravity", agingMaterial: "Silicone", agingDilution: "1" };
+$$(".seg").forEach(seg => {
+  const key = seg.dataset.key, paint = () => $$("button", seg).forEach(b => b.classList.toggle("on", b.dataset.v === state[key]));
+  $$("button", seg).forEach(b => b.onclick = () => { state[key] = b.dataset.v; paint(); key.startsWith("aging") ? loadAging() : loadExposure(); });
+  paint();
+});
+$("#minutes").oninput = () => { $("#minutes-out").textContent = $("#minutes").value; loadExposure(); };
+
+async function loadExposure() {
+  const e = await post("/api/exposure", { material: state.material, dilution: state.dilution, minutes: $("#minutes").value, activity: state.activity, gravity: state.gravity });
+  scene3d.setDeposition(e.fraction_by_count);
+  scene3d.setSmokeSize(e.aged_smoke.gmd_um / e.measured_source_smoke.gmd_um);
+  $("#regions").innerHTML = Object.entries(REGION).map(([k, [name, color]]) => `
+    <li><span class="dot" style="background:${color}"></span><span>${name}</span><b>${pct(e.fraction_by_count[k])}</b>
+    <small>of inhaled particles · ${pct(e.fraction_by_mass[k])} of inhaled mass</small></li>`).join("");
+  $("#r-count").textContent = big(e.alveolar_particles_per_min);
+  $("#r-mass").textContent = sig(e.mass_deposited_ug_per_10min, 3);
+  const low = e.band_low_gravity_effect;
+  $("#r-band").textContent = low
+    ? `Reduced-gravity band: alveoli ${pct(e.fraction_by_count.AL)} to ${pct(low.fraction_by_count.AL)} of particles, ${sig(e.mass_deposited_ug_per_10min, 3)} to ${sig(low.mass_deposited_ug_per_10min, 3)} µg. The lower gravity effect is our assumption (half the calibrated one).`
+    : "On Earth the model has no gravity band.";
+  $("#r-source").textContent = `Source smoke measured: ${sig(e.measured_source_smoke.gmd_um, 2)} µm, ${big(e.measured_source_smoke.number_conc_per_cm3)} particles/cm³, ${e.measured_source_smoke.n_runs} runs. ${e.sources.join(" · ")}. ${e.limits}`;
+
+  const c = e.curves, at = (key, dp) => c[key][c.dp_um.findIndex(d => d >= dp)];
+  const lines = Object.entries(REGION).map(([k, [name, color]]) => ({ x: c.dp_um, y: c[k], name, mode: "lines", line: { color, width: 2 },
+    hovertemplate: `${name}: %{y:.1%} at %{x:.3g} µm<extra></extra>` }));
+  const smoke = { x: c.dp_um, y: c.smoke_by_count, yaxis: "y2", name: "sizes in this smoke", mode: "lines", fill: "tozeroy", fillcolor: "rgba(238,240,242,.16)",
+    line: { color: INK2, width: 1.5 }, hovertemplate: "%{x:.3g} µm<extra>this smoke</extra>" };
+  draw("curve", [...lines, smoke], {
+    xaxis: axis({ type: "log", dtick: 1, range: [Math.log10(0.005), Math.log10(20)], title: { text: "particle diameter (µm)" }, anchor: "y2" }),
+    yaxis: axis({ domain: [0.34, 1], tickformat: ".0%", title: { text: "share deposited" }, rangemode: "tozero" }),
+    yaxis2: axis({ domain: [0, 0.2], showticklabels: false, ticks: "", title: { text: "this smoke" }, range: [0, 1.15] }),
+    annotations: [label(Math.log10(3), at("HA", 3), "Head airways", { xanchor: "right", xshift: -8, yshift: 0 }), label(Math.log10(0.0065), at("TB", 0.0065), "Bronchi", { xanchor: "left", yshift: 14 }),
+      label(Math.log10(0.03), at("AL", 0.03), "Alveoli")],
+  });
+}
+
+// ==================== 04 SMOKE AGING ====================
+let aging = null;
+async function loadAging() {
+  aging = await post("/api/aging", { material: state.agingMaterial, dilution: state.agingDilution });
+  showAge();
+}
+function showAge() {
+  const m = +$("#age").value, s = aging.series, row = s[m], x = s.map(r => r.minute);
+  $("#age-out").textContent = m;
+  $("#a-gmd").textContent = sig(row.gmd_um, 3);
+  $("#a-n").textContent = pct(row.number_conc_per_cm3 / s[0].number_conc_per_cm3).replace(".0", "");
+  $("#a-al").textContent = pct(row.alveolar_fraction_by_count);
+  scene3d.setSmokeSize(row.gmd_um / s[0].gmd_um);
+  draw("age-plot", [
+    { x, y: s.map(r => r.gmd_um), name: "size, volume-conserving model", mode: "lines", line: { color: "#3987e5", width: 2 }, hovertemplate: "%{y:.3f} µm at %{x} min<extra>volume-conserving</extra>" },
+    { x, y: s.map(r => r.gmd_um_empirical), name: "size, exponent fitted to SAME", mode: "lines", line: { color: "#c98500", width: 2, dash: "dot" }, hovertemplate: "%{y:.3f} µm at %{x} min<extra>fitted exponent</extra>" },
+    { x, y: s.map(r => r.alveolar_fraction_by_count), yaxis: "y2", name: "share reaching alveoli", mode: "lines", line: { color: "#199e70", width: 2 }, hovertemplate: "%{y:.1%} at %{x} min<extra>alveoli</extra>" },
+  ], {
+    xaxis: axis({ title: { text: "minutes since release" }, anchor: "y2", range: [0, 30] }),
+    yaxis: axis({ domain: [0.56, 1], title: { text: "particle size (µm)" } }),
+    yaxis2: axis({ domain: [0, 0.42], tickformat: ".0%", title: { text: "reaching alveoli" } }),
+    shapes: [{ type: "line", x0: m, x1: m, yref: "paper", y0: 0, y1: 1, line: { color: INK, width: 1, dash: "dot" } }],
+  });
+}
+$("#age").oninput = showAge;
+
+// ==================== 05 ASSISTANT ====================
+const escapeHtml = t => t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const pretty = t => escapeHtml(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+  .replace(/\[(Measured|Modeled|Recommendation)([^\]]*)\]/g, (_, kind, rest) => `<b class="tag ${kind.toLowerCase()}">${kind}</b>${rest ? `<small>${rest.replace(/^[,:\s—-]+/, " ")}</small>` : ""}`);
+async function ask(question) {
+  if (!question.trim()) return;
+  const chat = $("#chat");
+  chat.insertAdjacentHTML("beforeend", `<div class="msg q">${escapeHtml(question)}</div><div class="msg a wait">calling tools on NASA data…</div>`);
+  const slot = chat.lastElementChild;
+  slot.scrollIntoView({ block: "center", behavior: "smooth" });
+  const out = await post("/api/chat", { question }).catch(e => ({ answer: "Request failed: " + e, tool_calls: [] }));
+  slot.classList.remove("wait");
+  slot.innerHTML = pretty(out.answer || "No answer.") + (out.tool_calls.length ? `<details><summary>${out.tool_calls.length} tool call${out.tool_calls.length > 1 ? "s" : ""}: ${out.tool_calls.map(c => c.tool).join(", ")}</summary>${
+    out.tool_calls.map(c => `<pre>${escapeHtml(c.tool + "(" + JSON.stringify(c.args) + ")\n\n" + JSON.stringify(c.result, null, 1).slice(0, 2500))}</pre>`).join("")}</details>` : "");
+}
+$("#ask").onsubmit = e => { e.preventDefault(); ask($("#question").value); $("#question").value = ""; };
+$$(".chips button").forEach(b => b.onclick = () => ask(b.textContent));
+
+loadExposure();
+loadAging();
