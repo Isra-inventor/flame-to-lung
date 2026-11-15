@@ -1,0 +1,12 @@
+flask
+pandas
+numpy
+scipy
+scikit-learn
+openpyxl
+xlrd
+requests
+openai
+python-dotenv
+rank_bm25
+pytest
