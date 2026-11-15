@@ -1,0 +1,130 @@
+pi,test,date,sample,material,flow_restrictor,fan_display,air_display,o2_initial_pct,o2_final_pct,value_type,quality_flags,psi_id,source_file
+Bhattacharjee,B1,2/19/2014,147,100 micron PMMA film   2 cm wide,2,62,5,22.2,22.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B2,2/19/2014,155,200 micron PMMA film   2 cm wide,2,62,5,22.2,1.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B3,2/19/2014,148,100 micron film   2 cm wide,2,47,2,22.2,21.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B4,2/19/2014,159,300 micron PMMA film   2 cm wide ,2,61,5,22.2,22.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B5,2/19/2014,156,200 micron  2 cm wide ,2,59,5,22.2,21.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B6,7/7/2014,153m,2 cm 0.1 mm PMMA film,2,0.9   1.3   2.75,3   5   approaching 10,21.0,20.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B7,2/19/2014,161,400 micron film   2 cm wide,2,47,2,22.2,22.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B8,7/7/2014,157m,2 cm   0.2 mm PMMA film,0,1.4    incr to 10.0,10   max,21.0,20.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B9,7/7/2014,154m,2 cm   0.1 mm PMMA film,2,0.6   0.35,2   <1,21.0,20.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B10,7/7/2014,173m,1 cm   0.2 mm PMMA film,2,1.7 (52)   1.25   0.9   0.6   0.4   0.35,5  4  3  2  1,21.0,20.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B11,7/7/2014,158m,2 cm   0.2 mm PMMA film,2,2.5 (59)   1.3   0.7   0.5   0.35,5   3   1   <1,21.0,20.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B12,2/19/2014,160,300 micron film   2 cm wide,2,46.5,2,22.2,22.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B13,7/7/2014,162m,2 cm   0.4 mm thick film,2,3.5 (68)    1.7   1.25   0.9   0.6   0.4   0.35,10   5  4  3  2  1,21.0,20.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B14,7/2/2014,174m,1 cm wide 200 micron thick PMMA,2,pot 0.9   0.5 and down,5  3  2   ext,15.0,,observed,o2_final_pct_not_numeric,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B15,7/7/2014,149m,2 cm   0.1 mm PMMA film,0,1.4 (50) incr to 10.0 pot,10   max,21.0,20.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B16,7/2/2014,150m,2 cm 100 micron thick PMMA,2,44 (pot 0.68),3  0.5 pot   0.4 pot,17.3,17.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B17,7/2/2014,175m,1 cm wide 200 micron thick PMMA,2,pot 1.2 (48)    0.9   0.4 ,5   3    pot 0.4,17.5,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B18,7/2/2014,176m,1 cm wide 200 micron thick PMMA,0,pot 1.02 (47)   incr to 7.0,10   blowoff,17.4,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B19,7/2/2014,151m,2 cm 100 micron thick PMMA,0,47 (pot 1.05)   incr to pot 6.0,10   blowoff,17.3,17.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B20,7/2/2014,152m,2 cm 100 micron thick PMMA,2,48   pot 0.9   0.5,5   3      pot 0.5,17.4,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B21,8/4/2014,174m,1 cm wide 200 micron thick PMMA,1,53   and down,5 down to ext,20.8,20.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Bhattacharjee,B22,8/4/2014,176m,1 cm wide 200 micron thick PMMA,1,53   42   41   40.5,5   2   0,20.7,20.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Ferkul,F1,2/19/2014,227,Nomex natural (nomex III),2,82,9.5,22.2,22.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Ferkul,F2,7/28/2014,228m,Nomex natural (nomex III),2,92,15,21.0,21.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Ferkul,F3,8/1/2014,229m,Nomex natural (nomex III),1,61,8,21.7,,observed,o2_final_pct_not_numeric,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Ferkul,F4,6/24/2014,39M,Japan Wax candle,2,see notes,3 ign,17.4,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M1,2/20/2014,222,1 mm thick PMMA   1 sided   2 cm,2,58   54,10  8,22.2,21.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M2,2/20/2014,224,3 mm thick PMMA 1 sided    2 cm wide,0,116 (pot 9.3)    89   80   84,20  15  13   14,22.2,21.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M3,7/11/2014,226m,2 cm wide   5 mm thick 1 sided PMMA,2,3.0  3.1  3.2  6.4  5.5  5.4,10   20  18,20.8,19.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M4,7/31/2014,171m,5 mm thick PMMA   2 cm wide,1,52   47   43,5   4   3,21.8,19.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M5,2/20/2014,167,3 mm thick PMMA   2 sided   2 cm thick,0,,20  13  10  8  5,22.2,19.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M6,7/31/2014,163m,1 mm thick PMMA   2 cm wide,1,68   52   47   43   42   41,10   5   3   0,21.8,20.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M7,7/11/2014,177m,1 cm wide PMMA 1 mm thick,2,2.6   1.3   0.8  0.7  0.6  0.5; 60   49  45  44  43  42,10   6  5  4.5  4  3,18.9,18.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M8,7/11/2014,178m,1 cm wide PMMA 2 mm thick,2,3.3   1.6  1.0   decr,10   5>7  5 decr,19.1,18.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M9,7/11/2014,179m,1 cm wide PMMA 3 mm thick,2,3.3   4.8;66  79,10   14,18.0,17.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M10,7/23/2014,180m,4 mm thick   1 cm wide PMMA slab,2,75   105   94/91   72/69   63/61  (4.4   8.0   6.6/6.3   4.0/3.7   3/0/2.7),10  17  14  10  8,20.1,18.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M11,7/11/2014,181m,1 cm wide PMMA 5 mm thick,2,3.9  6.5  4.6  3.3  2.9  2.8; 62.5  93  77  66  63  62,10   20   15  12,20.0,18.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M12,7/31/2014,165m,2 mm thick PMMA   2 cm wide,1,41   42   41,<1,21.7,20.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M13,7/31/2014,169m,4 mm thick PMMA   2 cm wide,1,52   47   43,6   5   4,20.8,19.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M14,2/20/2014,223,2mm thick PMMA   1 sided   2 cm wide,2,pot 2.4   1.87  (54),10   ~8,22.2,21.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M15,7/7/2014,225m,2 cm   4 mm 1 sided PMMA slab,2,ignited 10   adjusted down then up to 20   down in incrments to 15,10   8  7  8  10  20  18  16  15,21.0,20.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M16,7/23/2014,164m,1 mm thick PMMA   2 cm wide,2,73  57  59  48  45  43  75 (4.2  2.2  2.4  1.2  0.8  0.5  4.4),10  6  3  2  1  10,19.2,18.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M17,7/15/2014,166m,2 cm wide PMMA 2 mm thick,2,Fan pot 3.7   1.7   1.5   1.3   0.8   0.6   0.5   0.3ext,10   5   3   0ext,18.8,17.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M18,7/15/2014,168m,2 cm wide PMMA 3 mm thick,2,Fan pot 3.5   5 (brief)   3  5   2.2,10   15 (brief)   10   8,17.9,16.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M19,7/23/2014,170m,4 mm thick   2 cm 2ide PMMA slab,2,75  105  94  75  77  79  59  61  57  55  53 (4.4  8.0  6.6  4.4  4.6  4.8  2.5  2.7  2.2  2.0  1.8),10  17  14  10  7  5,19.0,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Miller,M20,8/1/2014,172m,5 mm thick PMMA   2 cm wide,1,67   58,10  8,18.0,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O1,2/18/2014,207,"1/4"" clear rod",2,89  62  50  41,20  10  5  2  1,22.2,21.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O2,2/18/2014,204,"1/4"" clear rod",2,.54 pot   0.45 pot,0,22.2,21.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O3a,6/13/2014,205M,"1/4"" clear rod",2,,5  3,18.0,18.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O3b,6/13/2014,205M,"1/4"" clear rod",2,,5  3  2  1  low,18.0,17.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O4,7/8/2014,216m,"3/8""clear rod",2,5   0.7   0.5   0.4   0.36 ext,5   down to ext,14.8,13.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O5a,7/21/2014,220m,"1/2"" clear PMMA rod",2,1.3   2.7   1.3   0.7   0.45. 4.0,5  10  5   2   0 (49   62   49   44   42),15.1,14.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O5b,7/21/2014,220m,"1/2"" clear PMMA rod",2,1.3,49   5 cm/s,14.2,14.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O6,6/26/2014,206M,"1/4"" clear rod",2,5   .36  .32  .31  .305   out .275,see fan,16.7,16.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O7,6/26/2014,214m,"1/4"" clear rod",2,5   .36  .32  ..305   blowoff fan max 10,,16.0,15.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O8a,6/26/2014,208m,"1/4"" clear rod",2,5   .36  .32  .31   extinguished,,15.7,15.3,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O8b,6/26/2014,208m,"1/4"" clear rod",2,5  .36  .32  .31 blowoff fan pot 6.0,,15.5,15.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O9,6/26/2014,209m,"1/4"" clear rod",2,5   .36  .32 blowoff pt 4.0,,15.0,14.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O10,7/22/2014,210m,"1/4"" clear rod",2,49  44  41   122 (1.3   0.7   0.4   0.36   0.32   10),5  2   0   max,16.7,16.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O11,7/8/2014,184m,"1/4"" black rod",2,ign 5   0.36   0.32   0.31   0.305   blowoff 6.0,5   down then blowoff,15.4,14.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O12,7/8/2014,217m,"3/8"" clear rod",2,pots 1.4   3   0.9   0.7,no ign at any flow,13.6,13.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O13a,7/21/2014,221m,"1/2"" clear PMMA rod",2,1.3   0.7   0.45   0.36   0.32   0.31,49  44  42  41  41  40.5 (5   2   0),15.9,14.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O13b,7/21/2014,221m,"1/2"" clear PMMA rod",2,1.3   0.9,7   4? (49   ?),14.6,14.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O14,8/1/2014,183m,"1/4"" black rod",1,52   and down,5 down to ext,16.3,15.3,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O15a,7/28/2014,218m,"3/8"" clear rod",2,57.5   47   42   41 (2.3   1.0   0.5   0.35   0.32),5  0,17.1,16.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O15b,7/28/2014,218m,"3/8"" clear rod",2,57.5   42   41   40 (2.3   0.5   0.35   0.34   0.33   0.32   0.31   0.30   0.29   0.28   0.27),5   0,16.7,15.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O16,7/29/2014,219m,"3/8""clear rod",2,60 (2.6),5,14.5,14.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O17,7/22/2014,211m,"1/4"" clear rod",2,49   46.5   44   42  41  72   decr (1.3   1.0   0.7   0.5   0.4   4.0   decr ),3   0   11,15.1,14.3,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O18,7/28/2014,212m,"1/4"" clear rod",2,57  51  47  72  51  72  51  47 (2.3   1.5   1.0   4.0   1.5   4.0   1.5   1.0),5  2  0  11  2  11  2  0,15.2,14.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O19,8/1/2014,213m,"1/4"" clear rod",1,52   and down,5 down to ext,15.3,14.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O20,2/26/2016,204m,"1/4"" clear rod",0,49 (1.3 pot)   pots 7   8  9   10,5   8    incr to max 38.5,16.5,15.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O21,2/26/2016,219m,"3/8"" clear rod",0,46 (pot 0.8)    pot 7   10,incr to 28,15.9,15.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Olson,O22,2/26/2016,220m,"1/2"" clear rod ",0,49 (pot 1.1)   blowoff pot 5   out at fan 87,4 incr to 26.5,15.4,14.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P1,6/16/2014,185M,"1/4"" black rod",2,,5  2   slow decr to ext,17.7,17.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P2,6/16/2014,188M,"1/4"" black rod",2,,5   2.5   2 (pot .9   .5   .35.  .33),17.4,17.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P3a,6/16/2014,215M,"1/4"" clear rod",2,,5   2.5 (1.15   .5   .35   .33. .32   .315   .31   .3),17.7,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P3b,6/16/2014,215M,1/4 clear rod,2,,5   very low (0.85   0.32   0.31   0.305   0.30   0.295),17.4,16.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P4,7/3/2014,197m,"3/8"" black rod",2,48   41,5   pots 0.4   0.36   0.32   0.308   .3   off,18.5,17.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P5,7/14/2014,202m,"0.5"" black rod",2,Fan pot 1.5 (5cm/s)   0.9   0.4   0.36   0.32   0.308   0.3   0.29   0.28   0 ext,5 down to ext,19.3,17.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P6,7/3/2014,186m,"1/4"" black rod",2,48   41,5   pots 0.4   0.36   0.32   0.31   off,18.9,18.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P8,7/3/2014,197m,"3/8"" black rod",2,48   62   75,5   would not stay lit   10   15 ibid,16.4,16.3,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P9,7/14/2014,202m,"0.5"" black rod",2,Fan pot 1.5 (5cm/s)   0.9   0.4   0.36   0.32   0.3   0.28 ext,5 down to ext,17.6,17.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P10,7/3/2014,187m,"1/4"" black rod",2,48   41,5   pots 0.4   0.36   0.32   0.31   0.30 extinguished,17.0,16.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P12,7/29/2014,199m,"3/8"" black rod",2,60  52  48  44.5  42  41.5  41 (2.6  1.6  1.2  .75  .5  .4  .36  0.34),5   3  2  1   0.5   lower,17.5,16.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P13a,7/14/2014,203m,"0.5"" black rod",2,Fan pot 1.1 (5cm/s)   0.4   0.36   0.32   0.3   0.28   0.26   0 ext,5 down to ext,20.7,19.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P13b,7/14/2014,203m,"0.5"" black rod",2,Fan pot 1.3 (5cm/s)   0.4   0.36   0.32 ext,5 down to ext,20.6,20.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P14,6/23/2014,189M,1/4 blac rod,2,46   41,5   low (.85   .4   .32),18.4,18.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P15,6/23/2014,190M,1/4 black rod,2,46   41,5   (0.36),18.0,17.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P16,7/22/2014,191m,"1/4"" black rod",2,49  62  44  41.5  41 (pots 1.3   2.8   0.7   0.4   0.36   0.32),5  8  2  low,18.2,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P17,7/29/2014,192m,"1/4""  black rod",2,60  52  48  233  48  41 (2.6   1.6   1.2   10   1.2   0.36   0.34),5   3   2   22   2   low,16.8,16.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P18,7/30/2014,193m,"1/4"" black rod",2,55  47  etc (pot 1  2  1  2   etc),2  0  2  0  etc,20.0,19.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P19,7/22/2014,194m,"1/4"" black rod",2,49  62  44  41.5  122   41 (pots 1.3   2.8   0.7   0.4   0.36   10.   0.32),5  8  2  max   0,17.5,16.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P20,7/30/2014,195m,"1/4"" black rod",2,55  47  etc (pot 1  2  1  2   etc),2  0  2  0  etc,19.0,18.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P21a,6/23/2014,196M,1/4 black rod,2,46,5,16.3,16.3,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P21b,6/23/2014,196M,"1/4"" black rod",2,46,5,16.3,16.3,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P22a,7/8/2014,200m,"3/8"" black rod",2,5   0.36   0.32 ext after some time,5   down to ext,20.8,0.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P22b,7/8/2014,200m,"3/8"" black rod",2,5   p.36   0.34   0.33   0.32   0.31 ext,5 down to ext,20.0,39.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P23,7/30/2014,201m,"3/8"" black rod",2,55  47  etc (pot 1  2  1  2   etc),2  0  2  0  etc,18.2,17.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P24,7/30/2014,819L,"3/8"" black rod",2,55  47  etc (pot 1  2  1  2   etc),2  0  2  0  etc,19.0,17.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+Fernandez-Pello,P25,7/8/2014,217m,"3/8"" clear rod",2,5   p.36   0.34   0.33   0.32   0.31 ext,5 down to ext,20.9,20.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T1,2/14/2014,128,2 cm SIBAL,2,80,10,18.5,18.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T2,2/14/2014,129,2 cm SIBAL,2,80   59   55,9   5   4,18.5,18.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T3,6/27/2014,182m,4 cm spherical section,2,63,10,17.2,16.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T4,2/14/2014,130,2 cm SIBAL,2,80   46,9  1,18.7,18.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T5,4/10/2014,131,2 cm SIBAL,2,2.72   0.50   0.42,10   2   1,18.8,18.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T6,4/10/2014,132,2 cm SIBAL,2,,5  2  1   <1,18.8,18.8,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T7,7/9/2014,182m,4 cm spherical section,2,3.4   67,10   5  3  1   decr,17.3,17.1,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T9,6/24/2018,133M,2 cm SIBAL,2,pot 2.5,10,16.4,16.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T10,6/24/2014,134M,2 cm SIBAL,2,pot 1.1,5,16.4,16.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T11,6/27/2014,135m,2 cm SIBAL,2,48,5,17.1,17.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T12,6/27/2014,136m,2 cm SIBAL,2,pot 1.1,5,16.8,16.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T13,4/10/2014,137,2 cm SIBAL,2,,5  1,17.5,17.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T14,6/27/2014,140m,2 cm SIBAL,2,,5  3,16.9,16.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T15,2/14/2014,138,2 cm SIBAL,0,80122,9   29,18.7,18.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T16,4/10/2014,139,2 cm SIBAL,2,,5  3,17.6,17.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T17,6/27/2014,142m,2 cm SIBAL,0,,6   53,16.9,16.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T18,6/24/2018,141M,2 cm SIBAL,2,,5  2,17.4,17.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T19,7/9/2014,143m,1 cm SIBAL,2,68.5   pot 3.6,11,17.2,17.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T20,7/9/2014,144m,1 cm SIBAL,2,3.6   0.9,11   3,17.2,17.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T21,7/9/2014,145m,1 cm SIBAL,0,1.6 pot   52,11   max(47),17.2,17.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T22,7/9/2014,146m,1 cm SIBAL,2,3.4   1.7,10   5,17.1,17.0,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T23,7/9/2014,133m,2 cm Sibal   moved igniter,2,3.3   66,10,17.2,17.3,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T24,7/9/2014,133m,1 cm SIBAL   top side ign,2,3.3 66,10,18.2,18.2,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T25,8/4/2014,138m,2 cm SIBAL,1,53   45,5   2.5,20.8,20.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T26,8/4/2014,137m,2 cm SIBAL,1,53   45,5   2.5,20.8,20.7,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T27,8/4/2014,146m,1 cm SIBAL,1,53   45,5   2,20.7,20.6,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T28a,8/4/2014,144m,1 cm SIBAL,1,53,5,20.7,0.9,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T28b,8/4/2014,144m,1 cm SIBAL,1,53,5,20.7,40.4,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
+T'ien,T29,8/4/2014,145m,1 cm SIBAL,1,53   43,5   2(?),20.7,20.5,observed,,PSI-25,PSI-25_Experimental table_BASS-II.csv
