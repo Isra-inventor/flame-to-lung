@@ -1,0 +1,196 @@
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+DATA = Path(__file__).parent / "data" / "processed"
+GRID = np.logspace(-3, 2, 500)
+BREATHING_L_MIN = {"rest": 7.5, "light": 25.0, "heavy": 50.0}
+GRAVITY = {"1g": 1.0, "lunar": 1 / 6, "microgravity": 0.0}
+
+
+# ==================== 1. LUNG DEPOSITION (ICRP 66, Hinds 1999) ====================
+def deposition(dp):
+    dp = np.asarray(dp, dtype=float)
+    ln = np.log(dp)
+    inhalable = 1 - 0.5 * (1 - 1 / (1 + 0.00076 * dp**2.8))
+    head = inhalable * (1 / (1 + np.exp(6.84 + 1.183 * ln)) + 1 / (1 + np.exp(0.924 - 1.885 * ln)))
+    tb = (0.00352 / dp) * (np.exp(-0.234 * (ln + 3.40) ** 2) + 63.9 * np.exp(-0.819 * (ln - 1.61) ** 2))
+    al = (0.0155 / dp) * (np.exp(-0.416 * (ln + 2.84) ** 2) + 19.11 * np.exp(-0.482 * (ln - 1.362) ** 2))
+    return {"HA": head, "TB": tb, "AL": al}
+
+
+# ==================== 2. GRAVITY CORRECTION ====================
+# Calibrated so lunar gravity cuts deep-lung (TB+AL) deposition by 25% at 0.5 um
+# and 32% at 1 um (Darquenne & Prisk 2008). "low" = half that effect (assumption).
+LUNAR_DROP = {0.5: 0.25, 1.0: 0.32}
+PLATEAU = 0.40
+
+
+def _fit_sedimentation_curve():
+    share = {d: drop / (1 - GRAVITY["lunar"]) for d, drop in LUNAR_DROP.items()}
+    logit = {d: np.log(s / (PLATEAU - s)) for d, s in share.items()}
+    slope = (logit[1.0] - logit[0.5]) / np.log(2)
+    midpoint = np.exp(-logit[1.0] / slope)
+    return slope, midpoint
+
+
+SLOPE, MIDPOINT = _fit_sedimentation_curve()
+
+
+def sedimentation_share(dp, band="high"):
+    s = PLATEAU / (1 + np.exp(-SLOPE * (np.log(dp) - np.log(MIDPOINT))))
+    return s if band == "high" else 0.5 * s
+
+
+def deposition_at_gravity(dp, g=1.0, band="high"):
+    d = deposition(dp)
+    factor = 1 - sedimentation_share(np.asarray(dp, dtype=float), band) * (1 - g)
+    return {"HA": d["HA"], "TB": d["TB"] * factor, "AL": d["AL"] * factor}
+
+
+# ==================== 3. POLYDISPERSE SMOKE (lognormal) ====================
+def lognormal_weights(median, gsd):
+    w = np.exp(-0.5 * (np.log(GRID / median) / np.log(gsd)) ** 2)
+    return w / w.sum()
+
+
+def smoke_deposition(gmd, gsd, g=1.0, band="high"):
+    d = deposition_at_gravity(GRID, g, band)
+    mass_median = gmd * np.exp(3 * np.log(gsd) ** 2)
+    by_count, by_mass = lognormal_weights(gmd, gsd), lognormal_weights(mass_median, gsd)
+    return ({k: float((v * by_count).sum()) for k, v in d.items()},
+            {k: float((v * by_mass).sum()) for k, v in d.items()})
+
+
+# ==================== 4. SMOKE AGING (coagulation fitted to SAME) ====================
+def same_pairs():
+    same = pd.read_csv(DATA / "same.csv")
+    same = same[same["usable_for_size"]]
+    fresh = same[~same["is_aged"]]
+    aged = same[same["is_aged"]].copy()
+    aged["same_run"] = aged["same_run"].str.rstrip("a")
+    p = aged.merge(fresh, on=["same_run", "material"], suffixes=("", "_fresh"))
+    p["dt_s"] = p["net_aging_s"] - p["net_aging_s_fresh"]
+    p["K"] = (1 / p["number_conc_per_cm3"] - 1 / p["number_conc_per_cm3_fresh"]) / p["dt_s"]
+    p["b"] = (np.log(p["gmd_um"] / p["gmd_um_fresh"])
+              / np.log(p["number_conc_per_cm3_fresh"] / p["number_conc_per_cm3"]))
+    return p[(p["K"] > 0) & (p["dt_s"] > 0)]
+
+
+def age(n0, gmd0, k, seconds, exponent=1 / 3):
+    n = n0 / (1 + k * n0 * seconds)
+    return n, gmd0 * (n0 / n) ** exponent
+
+
+def fit_aging():
+    p = same_pairs()
+    per_material = {m: float(g["K"].median()) for m, g in p.groupby("material") if len(g) >= 5}
+    err_n, err_physics, err_empirical = [], [], []
+    for i, row in p.iterrows():
+        others = p.drop(i)
+        k, b = others["K"].median(), others["b"].median()
+        n, gmd = age(row["number_conc_per_cm3_fresh"], row["gmd_um_fresh"], k, row["dt_s"])
+        _, gmd_b = age(row["number_conc_per_cm3_fresh"], row["gmd_um_fresh"], k, row["dt_s"], b)
+        err_n.append(abs(n - row["number_conc_per_cm3"]) / row["number_conc_per_cm3"])
+        err_physics.append(abs(gmd - row["gmd_um"]))
+        err_empirical.append(abs(gmd_b - row["gmd_um"]))
+    return {"n_pairs": len(p), "K_pooled_cm3_s": float(p["K"].median()),
+            "K_by_material": per_material, "b_empirical": float(p["b"].median()),
+            "validation": {"number_conc_mean_abs_pct_error": float(np.mean(err_n) * 100),
+                           "gmd_mae_um_volume_conserving": float(np.mean(err_physics)),
+                           "gmd_mae_um_empirical_exponent": float(np.mean(err_empirical))},
+            "note": "K is an effective coefficient: chamber wall losses also lower N.",
+            "source": "PSI-101 SAME/SAME-R fresh vs aged pairs"}
+
+
+AGING = fit_aging()
+
+
+# ==================== 5. CREW EXPOSURE ====================
+def fresh_smoke(material):
+    same = pd.read_csv(DATA / "same.csv")
+    rows = same[(same["material"] == material) & same["usable_for_size"] & ~same["is_aged"]]
+    if rows.empty:
+        raise ValueError(f"No SAME size data for {material}")
+    cols = ["number_conc_per_cm3", "gmd_um", "gsd", "dusttrak_mass_mg_m3"]
+    return rows[cols].median().to_dict() | {"n_runs": len(rows)}
+
+
+def exposure(material, dilution=0.01, minutes=0, activity="rest", gravity="1g"):
+    src = fresh_smoke(material)
+    k = AGING["K_by_material"].get(material, AGING["K_pooled_cm3_s"])
+    n0 = src["number_conc_per_cm3"] * dilution
+    n, gmd = age(n0, src["gmd_um"], k, minutes * 60)
+    _, gmd_empirical = age(n0, src["gmd_um"], k, minutes * 60, AGING["b_empirical"])
+    mass = src["dusttrak_mass_mg_m3"] * dilution
+    air_cm3_min = BREATHING_L_MIN[activity] * 1000
+    g = GRAVITY[gravity]
+
+    def dose(band):
+        count, by_mass = smoke_deposition(gmd, src["gsd"], g, band)
+        return {"fraction_by_count": count, "fraction_by_mass": by_mass,
+                "alveolar_particles_per_min": n * air_cm3_min * count["AL"],
+                "mass_deposited_ug_per_10min": mass * (air_cm3_min / 1e6) * 10 * sum(by_mass.values()) * 1000}
+
+    result = dose("high")
+    result["band_low_gravity_effect"] = dose("low") if g < 1 else None
+    result |= {
+        "label": "Modeled",
+        "inputs": {"material": material, "dilution": dilution, "minutes": minutes,
+                   "activity": activity, "gravity": gravity},
+        "measured_source_smoke": src,
+        "aged_smoke": {"number_conc_per_cm3": n, "gmd_um": gmd, "gmd_um_empirical_exponent": gmd_empirical,
+                       "gsd": src["gsd"], "mass_mg_m3": mass, "K_cm3_s": k},
+        "sources": ["PSI-101 (SAME smoke, measured)", "ICRP 66 / Hinds 1999 (deposition model)",
+                    "Darquenne & Prisk 2008 (gravity calibration)"],
+        "limits": "Deposition is not toxicity. Gases (CO, HF) not modelled. Average adult, unit-density spheres.",
+    }
+    return result
+
+
+# ==================== 6. HAZARD MATRIX + GAP MAP ====================
+SMOKE_NAME = {"Kapton": "Kapton", "Silicone": "Silicone", "Lampwick": "Cotton", "Teflon": "Teflon", "Pyrell": "Pyrell foam"}
+FIRE_NAME = {"Cotton/SIBAL": "Cotton", "PMMA": "PMMA", "Nomex": "Nomex", "Ultem": "Ultem", "Wax": "Wax"}
+
+
+def hazard_matrix():
+    rows = {}
+    for same_name, name in SMOKE_NAME.items():
+        e = exposure(same_name, dilution=1, minutes=0, activity="rest", gravity="1g")
+        rows[name] = {"smoke": {"gmd_um": e["measured_source_smoke"]["gmd_um"],
+                                "mass_mg_m3": e["measured_source_smoke"]["dusttrak_mass_mg_m3"],
+                                "alveolar_fraction_by_count": e["fraction_by_count"]["AL"],
+                                "mass_deposited_ug_per_10min": e["mass_deposited_ug_per_10min"],
+                                "n_runs": e["measured_source_smoke"]["n_runs"], "source": "PSI-101"}}
+
+    bass = pd.read_csv(DATA / "bass.csv")
+    for family, name in FIRE_NAME.items():
+        counts = bass[bass["material_family"] == family]["outcome"].value_counts().to_dict()
+        rows.setdefault(name, {})["fire"] = {"bass_tests": counts, "source": "PSI-26"}
+
+    saffire = pd.read_csv(DATA / "saffire.csv")
+    for key, name in [("Silicone", "Silicone"), ("SIBAL", "Cotton"), ("PMMA", "PMMA"), ("Nomex", "Nomex")]:
+        s = saffire[saffire["material"].str.contains(key)]
+        fire = rows.setdefault(name, {}).setdefault("fire", {"source": ""})
+        fire["saffire_samples"] = len(s)
+        fire["saffire_ug_burn_length"] = s["ug_burn_length"].dropna().tolist()
+        fire["source"] = (fire["source"] + ", PSI-98/99/100").strip(", ")
+
+    gaps = []
+    for name, r in rows.items():
+        if "fire" not in r:
+            gaps.append(f"No microgravity flammability data for {name} in these datasets.")
+        if "smoke" not in r:
+            gaps.append(f"No smoke particle data for {name} in these datasets.")
+    has_smoke = {n: r["smoke"] for n, r in rows.items() if "smoke" in r}
+    return {"materials": rows, "gaps": gaps,
+            "rank_alveolar_fraction": sorted(has_smoke, key=lambda n: -has_smoke[n]["alveolar_fraction_by_count"]),
+            "rank_mass_dose": sorted(has_smoke, key=lambda n: -has_smoke[n]["mass_deposited_ug_per_10min"])}
+
+
+if __name__ == "__main__":
+    import json
+    print(json.dumps(AGING, indent=1))
+    print(json.dumps(exposure("Kapton", 0.01, 0, "rest", "1g"), indent=1, default=float))
+    m = hazard_matrix()
+    print(json.dumps({k: m[k] for k in ["gaps", "rank_alveolar_fraction", "rank_mass_dose"]}, indent=1))
