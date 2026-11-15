@@ -17,7 +17,7 @@ def test_fractions_are_valid():
     d = engine.deposition(engine.GRID)
     total = d["HA"] + d["TB"] + d["AL"]
     assert all((v >= 0).all() for v in d.values())
-    assert (total <= 1).all()
+    assert (total <= 1 + 1e-9).all()
 
 
 def test_least_deposition_near_0_3_um():

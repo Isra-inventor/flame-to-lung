@@ -16,7 +16,8 @@ def deposition(dp):
     head = inhalable * (1 / (1 + np.exp(6.84 + 1.183 * ln)) + 1 / (1 + np.exp(0.924 - 1.885 * ln)))
     tb = (0.00352 / dp) * (np.exp(-0.234 * (ln + 3.40) ** 2) + 63.9 * np.exp(-0.819 * (ln - 1.61) ** 2))
     al = (0.0155 / dp) * (np.exp(-0.416 * (ln + 2.84) ** 2) + 19.11 * np.exp(-0.482 * (ln - 1.362) ** 2))
-    return {"HA": head, "TB": tb, "AL": al}
+    overshoot = np.maximum(head + tb + al, 1.0)
+    return {"HA": head / overshoot, "TB": tb / overshoot, "AL": al / overshoot}
 
 
 # ==================== 2. GRAVITY CORRECTION ====================
