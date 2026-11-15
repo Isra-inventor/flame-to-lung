@@ -2,7 +2,21 @@ import * as THREE from "/static/vendor/three.module.min.js";
 
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
-const post = (url, body) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
+// ==================== ERRORS SHOWN ON THE PAGE ====================
+function report(where, error) {
+  console.error(where, error);
+  let box = $("#errors");
+  if (!box) { box = document.createElement("pre"); box.id = "errors"; document.body.append(box); }
+  box.textContent += `${where}: ${error?.message || error}\n`;
+}
+addEventListener("error", e => report("script", e.error || e.message));
+addEventListener("unhandledrejection", e => report("request", e.reason));
+async function getJson(url, options) {
+  const r = await fetch(url, options);
+  if (!r.ok) throw new Error(`${url} answered ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  return r.json();
+}
+const post = (url, body) => getJson(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 const REGION = { HA: ["Head airways", "#3987e5"], TB: ["Bronchi", "#d95926"], AL: ["Alveoli", "#199e70"] };
 const INK = "#eef0f2", INK2 = "#a9b0ba", GRID = "rgba(238,240,242,.07)";
 const pct = x => (100 * x).toFixed(1) + "%";
@@ -10,7 +24,7 @@ const big = x => x >= 1e9 ? (x / 1e9).toFixed(1) + " billion" : x >= 1e6 ? (x / 
 const sig = (x, n = 3) => Number(x.toPrecision(n)).toString();
 
 // ==================== 3D SCENE: FLAME, SMOKE, LUNG ====================
-const scene3d = (() => {
+function buildScene() {
   const canvas = $("#space");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -166,7 +180,9 @@ const scene3d = (() => {
     setDeposition: f => levelTarget.set(...["HA", "TB", "AL"].map(k => Math.min(1, Math.sqrt(f[k] / 0.3)))),
     setSmokeSize: ratio => grow = ratio,
   };
-})();
+}
+let scene3d = { setPose() {}, setDeposition() {}, setSmokeSize() {} };
+try { scene3d = buildScene(); } catch (error) { report("3D scene is off (this browser has no WebGL); charts and assistant still work", error); }
 
 // ==================== CHAPTER TRACKING ====================
 const watcher = new IntersectionObserver(entries => entries.forEach(e => {
@@ -185,7 +201,7 @@ const draw = (id, traces, lay) => Plotly.react(id, traces, layout(lay), { displa
 const label = (x, y, text, extra = {}) => ({ x, y, text, showarrow: false, font: { color: INK, size: 11 }, yshift: 12, ...extra });
 
 // ==================== 01 LIFECYCLE ====================
-const cards = await fetch("/api/cards").then(r => r.json());
+const cards = await getJson("/api/cards").catch(e => (report("cards", e), []));
 function showStage(stage) {
   $$(".stages button").forEach(b => b.setAttribute("aria-selected", b.dataset.stage === stage));
   $("#cards").innerHTML = cards.filter(c => c.stage === stage).map(c => `
@@ -202,7 +218,8 @@ $$(".stages button").forEach(b => b.onclick = () => showStage(b.dataset.stage));
 showStage("overheating");
 
 // ==================== 02 MATERIALS ====================
-const matrix = await fetch("/api/matrix").then(r => r.json());
+const matrix = await getJson("/api/matrix").catch(e => (report("matrix", e), null));
+if (matrix) try {
 function fireCell(f) {
   if (!f) return `<td class="gap">NO DATA</td>`;
   const lines = [];
@@ -226,6 +243,7 @@ function rankBars(id, order, value, format, unit) {
 }
 rankBars("rank-count", matrix.rank_alveolar_fraction, s => 100 * s.alveolar_fraction_by_count, v => v.toFixed(1) + "%", "% of inhaled particles");
 rankBars("rank-mass", matrix.rank_mass_dose, s => s.mass_deposited_ug_per_10min, v => big(v) + " µg", "µg per 10 min");
+} catch (error) { report("materials", error); }
 
 // ==================== 03 CREW EXPOSURE ====================
 const state = { material: "Kapton", dilution: "0.01", activity: "rest", gravity: "microgravity", agingMaterial: "Silicone", agingDilution: "1" };
@@ -309,5 +327,5 @@ async function ask(question) {
 $("#ask").onsubmit = e => { e.preventDefault(); ask($("#question").value); $("#question").value = ""; };
 $$(".chips button").forEach(b => b.onclick = () => ask(b.textContent));
 
-loadExposure();
-loadAging();
+loadExposure().catch(e => report("exposure", e));
+loadAging().catch(e => report("aging", e));

@@ -161,3 +161,7 @@ footer { padding: 40px clamp(20px, 6vw, 96px) 60px; border-top: 1px solid var(--
   html { scroll-behavior: auto; }
   .card, .msg.a.wait { animation: none; }
 }
+
+/* ==================== ERROR BOX ==================== */
+#errors { position: fixed; z-index: 9; left: 12px; right: 12px; bottom: 12px; max-height: 40vh; overflow: auto; margin: 0; padding: 12px 14px;
+  background: #1a0d08; border: 1px solid var(--soot); color: #ffd9a8; font: 12px/1.5 var(--mono); white-space: pre-wrap; }
