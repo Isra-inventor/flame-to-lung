@@ -12,7 +12,21 @@
       "DBP is a liquid aerosol and its size moments were not reduced by NASA (20 rows, excluded from size models)."
     ],
     "safety_meaning": "Smoke detectors and crew masks must work for very small particles, and the particle size depends on which material is overheating.",
-    "sources": ["NASA PSI-102", "NASA PSI-101", "Urban et al., AIAA 2012", "Mulholland et al., Aerosol Sci. Tech. 2015"]
+    "sources": [
+      "NASA PSI-102",
+      "NASA PSI-101",
+      "Urban et al., AIAA 2012",
+      "Mulholland et al., Aerosol Sci. Tech. 2015"
+    ],
+    "compare": {
+      "name": "SAME / SAME-R",
+      "objective": "Measure the smoke that overheated spacecraft materials give off, to design better detectors",
+      "fuel": "Kapton, silicone rubber, cotton lampwick, Teflon, Pyrell foam, DBP liquid; small heated samples (not flaming)",
+      "conditions": "Air flow 2 to 8 cm/s over the sample; sample temperature about 180 to 580 °C",
+      "variables": "Material, heating level, air flow, smoke aging time",
+      "measurements": "Particle number concentration, diameter moment, DustTrak mass, sample temperature, mass loss",
+      "hardware": "Microgravity Science Glovebox (MSG), ISS"
+    }
   },
   {
     "id": "same-r",
@@ -27,7 +41,10 @@
       "Silicone and Pyrell smoke carry the most mass; Kapton smoke has the smallest particles."
     ],
     "safety_meaning": "Smoke that lingers changes size, which changes how detectors see it and where it lands in the lungs.",
-    "sources": ["NASA PSI-101", "Mulholland et al., Aerosol Sci. Tech. 2015"]
+    "sources": [
+      "NASA PSI-101",
+      "Mulholland et al., Aerosol Sci. Tech. 2015"
+    ]
   },
   {
     "id": "flex",
@@ -42,7 +59,18 @@
       "Oxygen ranged from 0.12 to 0.34 mole fraction; CO2 up to 0.70 and helium up to 0.45 were used as diluents."
     ],
     "safety_meaning": "Shows how oxygen level and suppressant gas decide whether a flame goes out in microgravity, which guides the choice of extinguisher gas and cabin atmosphere.",
-    "sources": ["NASA PSI-69"]
+    "sources": [
+      "NASA PSI-69"
+    ],
+    "compare": {
+      "name": "FLEX",
+      "objective": "Find what makes a flame go out in microgravity, to choose suppressants and cabin atmospheres",
+      "fuel": "Single droplets of methanol or heptane, 1.1 to 4.7 mm across",
+      "conditions": "Oxygen 12 to 34%; pressure about 0.7 to 3 atm; diluted with nitrogen, CO2 (up to 70%) or helium (up to 45%)",
+      "variables": "Fuel, oxygen level, diluent gas, pressure, droplet size",
+      "measurements": "Droplet diameter over time, burning rate, extinction diameter, burn time, how the test ended",
+      "hardware": "Multi-user Droplet Combustion Apparatus (MDCA) in the Combustion Integrated Rack (CIR), ISS"
+    }
   },
   {
     "id": "flex-cool-flames",
@@ -56,7 +84,10 @@
       "In the table, 'Visible flame extinction diameter' records the droplet size when the visible flame went out; fuel remained at that moment in extinction tests."
     ],
     "safety_meaning": "'No visible flame' does not prove a fire is out. Crews should keep monitoring for heat and combustion products after a fire appears extinguished.",
-    "sources": ["NASA PSI-69", "Nayagam et al., Combustion and Flame 159 (2012) 3583"]
+    "sources": [
+      "NASA PSI-69",
+      "Nayagam et al., Combustion and Flame 159 (2012) 3583"
+    ]
   },
   {
     "id": "bass",
@@ -71,7 +102,18 @@
       "Many samples kept burning at very low air flow, where flames turn dim and blue."
     ],
     "safety_meaning": "Flames in microgravity can survive in slow ventilation flows, so stopping the fans does not always stop a fire quickly.",
-    "sources": ["NASA PSI-26"]
+    "sources": [
+      "NASA PSI-26"
+    ],
+    "compare": {
+      "name": "BASS",
+      "objective": "See how solid materials burn and are extinguished in slow air flows",
+      "fuel": "SIBAL cotton-fiberglass fabric (1 to 2 cm wide), PMMA sheets, rods and 1 to 2 cm spheres, wax candles, Nomex, Ultem",
+      "conditions": "Cabin oxygen 16 to 23%; fan-driven flow, reduced during the test; nitrogen jet for suppression",
+      "variables": "Material, sample shape, flow speed, flow direction, nitrogen suppression",
+      "measurements": "Video and still images, radiometer, crew observations",
+      "hardware": "SPICE flow duct in the Microgravity Science Glovebox (MSG), ISS"
+    }
   },
   {
     "id": "bass-ii",
@@ -85,7 +127,19 @@
       "The NASA table is a test log; measured flame-spread rates are published in Link et al. 2018 and are not in our tables."
     ],
     "safety_meaning": "Maps the oxygen and flow limits where solid materials stop burning, which sets how low cabin oxygen or ventilation must go to be safe.",
-    "sources": ["NASA PSI-25", "Link et al., Sci. Rep. 8:120 (2018)"]
+    "sources": [
+      "NASA PSI-25",
+      "Link et al., Sci. Rep. 8:120 (2018)"
+    ],
+    "compare": {
+      "name": "BASS-II",
+      "objective": "Map how flame spread depends on oxygen and flow, down to the limits where burning stops",
+      "fuel": "PMMA rods (1/4 to 1/2 inch), PMMA films (100 to 200 µm), SIBAL fabric, Nomex",
+      "conditions": "Oxygen 13.6 to 22.2%; fan-driven flow",
+      "variables": "Material, thickness or diameter, oxygen level, flow speed",
+      "measurements": "Images, radiometer, oxygen, CO2 and CO readings before and after",
+      "hardware": "SPICE flow duct in the Microgravity Science Glovebox (MSG), ISS"
+    }
   },
   {
     "id": "saffire-1-3",
@@ -99,7 +153,10 @@
       "These are the largest deliberate fires in the dataset, far bigger than the centimetre-scale ISS samples."
     ],
     "safety_meaning": "Tests whether small-sample results scale up to a realistic spacecraft fire.",
-    "sources": ["NASA PSI-98", "NASA PSI-100"]
+    "sources": [
+      "NASA PSI-98",
+      "NASA PSI-100"
+    ]
   },
   {
     "id": "saffire-2",
@@ -114,7 +171,18 @@
       "In the PMMA-Nomex sample the PMMA was consumed but the Nomex did not ignite."
     ],
     "safety_meaning": "A material's flammability ranking on Earth does not carry over directly to microgravity; some materials are safer, and that has to be tested.",
-    "sources": ["NASA PSI-99"]
+    "sources": [
+      "NASA PSI-99"
+    ],
+    "compare": {
+      "name": "Saffire I–III",
+      "objective": "Test whether small-sample results hold for a realistically large fire",
+      "fuel": "SIBAL fabric sheet about 41 × 94 cm (I, III); nine 5 × 29 cm samples of silicone, SIBAL, PMMA, Nomex (II)",
+      "conditions": "Air flow 20 to 30 cm/s; oxygen about 21.5 to 22.1%",
+      "variables": "Material, thickness, flow direction (concurrent or opposed), flow speed",
+      "measurements": "Two cameras, burn length, spread rate, comparison with normal gravity",
+      "hardware": "Uncrewed Cygnus cargo vehicle after leaving the ISS"
+    }
   },
   {
     "id": "spice",
@@ -127,7 +195,18 @@
       "The smoke point datasheet is available from NASA PSI but is not processed into our tables, so we report no numbers from it."
     ],
     "safety_meaning": "Smoke point tells how readily a fuel makes soot, which affects both smoke detection and what the crew breathes.",
-    "sources": ["NASA PSI-107"]
+    "sources": [
+      "NASA PSI-107"
+    ],
+    "compare": {
+      "name": "SPICE",
+      "objective": "Find the flame length at which a flame starts to release soot",
+      "fuel": "Gas-jet flames",
+      "conditions": "Co-flowing air in a duct",
+      "variables": "Not processed in our tables",
+      "measurements": "Smoke point",
+      "hardware": "SPICE flow duct in the Microgravity Science Glovebox (MSG), ISS"
+    }
   },
   {
     "id": "lung-model",
@@ -142,6 +221,11 @@
       "In lunar gravity, deposition of 0.5 and 1 um particles is lower than on Earth; in microgravity what does deposit shifts toward the lung periphery."
     ],
     "safety_meaning": "Deposition is not toxicity, and gases such as CO or HF are not modelled. Results are for an average adult and are labelled Modeled.",
-    "sources": ["ICRP Publication 66 (1994)", "Hinds, Aerosol Technology (1999)", "Darquenne & Prisk 2008, doi:10.1007/s00421-008-0766-y", "Darquenne et al. 2014, J Appl Physiol 117:880"]
+    "sources": [
+      "ICRP Publication 66 (1994)",
+      "Hinds, Aerosol Technology (1999)",
+      "Darquenne & Prisk 2008, doi:10.1007/s00421-008-0766-y",
+      "Darquenne et al. 2014, J Appl Physiol 117:880"
+    ]
   }
 ]

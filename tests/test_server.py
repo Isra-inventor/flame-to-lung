@@ -16,7 +16,8 @@ def test_exposure_route():
     assert len(out["curves"]["dp_um"]) == len(out["curves"]["AL"])
 
 
-def test_aging_route():
-    series = client.post("/api/aging", json={"material": "Silicone", "dilution": 1}).json["series"]
-    assert len(series) == 31
-    assert series[30]["gmd_um"] > series[0]["gmd_um"]
+def test_flammability_route():
+    body = {"fuel": "Heptane", "o2_pct": 30, "co2_pct": 0, "he_pct": 0, "pressure_mmhg": 527, "d0_mm": 3}
+    out = client.post("/api/flammability", json=body).json
+    assert 0 <= out["probability_flame_goes_out_early"] <= 1
+    assert len(out["oxygen_sweep"]) == 23

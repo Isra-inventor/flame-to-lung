@@ -41,6 +41,7 @@ button, input { font: inherit; color: inherit; }
 .rail-mark { font: italic 26px var(--serif); letter-spacing: 0; text-transform: none; color: var(--ink) !important; margin-bottom: auto; }
 
 /* ==================== SECTIONS ==================== */
+.page[hidden] { display: none; }
 section { min-height: 100vh; padding: 11vh clamp(20px, 6vw, 96px) 10vh; max-width: 1320px; }
 .chapter { display: grid; grid-template-columns: auto 1fr; column-gap: 22px; align-items: baseline; margin-bottom: 32px; }
 .chapter span { font: 12px var(--mono); color: var(--flame); letter-spacing: .1em; }
@@ -145,6 +146,33 @@ details pre { max-height: 220px; overflow: auto; border: 1px solid var(--line); 
 .ask button { background: none; border: 0; font: 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--flame); cursor: pointer; padding: 0 4px 0 16px; }
 footer { padding: 40px clamp(20px, 6vw, 96px) 60px; border-top: 1px solid var(--line); font: 12px/1.6 var(--mono); color: var(--ink-3); max-width: 1320px; }
 
+/* ==================== GUIDES, STEPS, PAGE LINKS ==================== */
+.tour { list-style: none; padding: 0; margin-top: 44px; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); counter-reset: tour; }
+.tour a { display: block; padding: 14px 16px 0 0; color: var(--ink-2); text-decoration: none; font-size: 13px; line-height: 1.45; }
+.tour a::before { counter-increment: tour; content: "0" counter(tour); display: block; font: 11px var(--mono); color: var(--flame); margin-bottom: 6px; }
+.tour b { display: block; font: 400 24px/1.1 var(--serif); color: var(--ink); margin-bottom: 6px; }
+.tour a:hover b { color: var(--flame); }
+.guide { border: 1px solid var(--line); background: rgba(6, 8, 12, .78); padding: 14px 18px; margin: 0 0 32px; max-width: 92ch; font: inherit; color: var(--ink-2); }
+.guide summary { font: 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--flame); }
+.guide ul { margin: 12px 0 2px; padding-left: 18px; display: grid; gap: 6px; font-size: 15px; }
+.guide b { color: var(--ink); font-weight: 500; }
+.steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 28px; margin-bottom: 40px; counter-reset: step; }
+.steps li { border-top: 1px solid var(--line); padding-top: 12px; color: var(--ink-2); font-size: 14px; background: rgba(6, 8, 12, .6); }
+.steps li::before { counter-increment: step; content: "step " counter(step); font: 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--flame); }
+.steps b { display: block; font: 400 23px/1.15 var(--serif); color: var(--ink); margin: 6px 0 8px; }
+.glossary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 28px; margin-top: 40px; }
+.glossary div { border-top: 1px solid var(--line); padding-top: 12px; }
+.glossary dt { font: 400 22px var(--serif); color: var(--ink); text-transform: none; letter-spacing: 0; display: flex; gap: 8px; align-items: center; }
+.glossary dd { font: 14px/1.5 var(--sans); color: var(--ink-2); margin-top: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sub { font: 400 34px var(--serif); margin-top: 64px; }
+.compare td { min-width: 150px; font-size: 13px; padding: 12px 10px; }
+.compare td:first-child small { display: block; font: 11px var(--mono); color: var(--flame); }
+.next { display: inline-block; margin-top: 48px; font: 12px var(--mono); letter-spacing: .08em; color: var(--flame); text-decoration: none; border-bottom: 1px solid var(--flame); padding-bottom: 3px; }
+.flame-side { display: flex; flex-direction: column; justify-content: flex-end; }
+.flame-space { min-height: 300px; flex: 1; }
+.control > small { display: block; margin-top: 6px; }
+
 /* ==================== SMALL SCREENS + MOTION ==================== */
 @media (max-width: 900px) {
   :root { --rail: 0px; }
@@ -155,6 +183,8 @@ footer { padding: 40px clamp(20px, 6vw, 96px) 60px; border-top: 1px solid var(--
   .lung-space { min-height: 320px; }
   .regions { grid-template-columns: 1fr; }
   .chapter { grid-template-columns: 1fr; }
+  .tour, .steps, .glossary { grid-template-columns: 1fr; row-gap: 18px; }
+  .flame-space { min-height: 240px; }
   .chapter p { grid-column: 1; }
 }
 @media (prefers-reduced-motion: reduce) {

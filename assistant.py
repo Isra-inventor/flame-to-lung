@@ -15,8 +15,9 @@ SYSTEM_PROMPT = """You are a spacecraft fire-safety briefing assistant built on 
 Rules:
 1. Always call tools first. Never state a number that did not come from a tool result in this conversation.
 2. Label every claim [Measured] (NASA data), [Modeled] (our physics engine) or [Recommendation] (your advice).
-   Only "measured_source_smoke" and query_table values are [Measured]. Everything else from smoke_exposure,
-   including aged smoke, deposition fractions and doses, is [Modeled].
+   Only "measured_source_smoke" and query_table values are [Measured]. Everything else from smoke_exposure
+   (aged smoke, deposition fractions, doses) and everything from flammability_estimate is [Modeled].
+   flammability_estimate is about fuel droplets only; never apply it to solid materials.
 3. State the dilution scenario you assumed. Cite the PSI IDs or papers given in the tool results.
 4. If the tools do not have it, say "not in the data". Do not guess.
 5. Mention limits when relevant: deposition is not toxicity; toxic gases are not modelled.
@@ -69,6 +70,12 @@ def material_evidence():
     return _round(engine.hazard_matrix() | {"aging_model": engine.AGING})
 
 
+# ==================== TOOL 5: FLAMMABILITY PREDICTION ====================
+def flammability_estimate(fuel="Heptane", o2_pct=21, co2_pct=0, he_pct=0, pressure_mmhg=760, droplet_mm=3):
+    return _round(engine.flammability(fuel, float(o2_pct) / 100, float(co2_pct) / 100, float(he_pct) / 100,
+                                      float(pressure_mmhg), float(droplet_mm)))
+
+
 def _round(x):
     if isinstance(x, float):
         return float(f"{x:.3g}")
@@ -86,7 +93,8 @@ def _schema(name, description, properties, required=()):
 
 
 TOOLS = {"search_investigations": search_investigations, "query_table": query_table,
-         "smoke_exposure": smoke_exposure, "material_evidence": material_evidence}
+         "smoke_exposure": smoke_exposure, "material_evidence": material_evidence,
+         "flammability_estimate": flammability_estimate}
 
 SCHEMAS = [
     _schema("search_investigations", "Find NASA investigation summaries (SAME, FLEX, cool flames, BASS, BASS-II, Saffire, SPICE, lung model).",
@@ -101,14 +109,21 @@ SCHEMAS = [
              "minutes": {"type": "number", "description": "minutes the smoke has aged in the cabin"},
              "activity": {"type": "string", "enum": list(engine.BREATHING_L_MIN)},
              "gravity": {"type": "string", "enum": list(engine.GRAVITY)}}, ["material"]),
+    _schema("flammability_estimate", "Machine-learning prediction, trained on FLEX droplet tests: chance the flame goes out before the fuel is used up, and the burning rate.",
+            {"fuel": {"type": "string", "enum": ["Heptane", "Methanol"]}, "o2_pct": {"type": "number", "description": "oxygen, percent by mole (tested 12 to 34)"},
+             "co2_pct": {"type": "number"}, "he_pct": {"type": "number"},
+             "pressure_mmhg": {"type": "number", "description": "760 = 1 atm; 10.2 psi = 527"}, "droplet_mm": {"type": "number"}}),
     _schema("material_evidence", "Which materials have flammability evidence, smoke evidence, or gaps; inhalation rankings; smoke aging fit.", {}),
 ]
 
 
 # ==================== THE AGENT LOOP ====================
 def ask(question, history=None):
-    load_dotenv()
-    client = OpenAI(base_url=os.environ["LLM_BASE_URL"], api_key=os.environ["LLM_API_KEY"])
+    load_dotenv(override=True)
+    key = os.environ.get("LLM_API_KEY", "").strip().strip('"\'')
+    if not key or key == "put-your-key-here":
+        raise RuntimeError("No API key found. Open the .env file, set LLM_API_KEY=your OpenRouter key (no spaces or quotes), save, and restart the server.")
+    client = OpenAI(base_url=os.environ["LLM_BASE_URL"], api_key=key)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}] + (history or []) + [{"role": "user", "content": question}]
     calls = []
     for _ in range(6):
@@ -135,6 +150,7 @@ DEMO_QUESTIONS = [
     "Does smoke get more or less dangerous as it drifts through the cabin for 15 minutes?",
     "How does lunar gravity change where smoke deposits in the lungs?",
     "What did FLEX teach us about fires that seem to be out?",
+    "A Moon base will use 30% oxygen at 10.2 psi. How does that change how a fuel droplet burns?",
 ]
 
 if __name__ == "__main__":

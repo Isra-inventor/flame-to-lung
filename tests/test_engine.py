@@ -67,3 +67,16 @@ def test_matrix_finds_the_gaps():
     m = engine.hazard_matrix()
     assert m["rank_alveolar_fraction"][0] == "Kapton"
     assert any("Kapton" in g for g in m["gaps"])
+
+
+# ==================== FLAMMABILITY MODEL ====================
+def test_more_oxygen_keeps_the_flame_alive():
+    low, high = engine.flammability(o2_frac=0.14), engine.flammability(o2_frac=0.32)
+    assert low["probability_flame_goes_out_early"] > high["probability_flame_goes_out_early"]
+    assert high["burning_rate_mm2_s"] > low["burning_rate_mm2_s"]
+
+
+def test_flammability_model_beats_guessing_and_flags_extrapolation():
+    assert engine.FLAMMABILITY["metrics"]["extinction_auc"] > 0.7
+    assert engine.FLAMMABILITY["metrics"]["rate_r2"] > 0.5
+    assert engine.flammability(o2_frac=0.6)["outside_tested_range"]

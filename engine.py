@@ -189,9 +189,68 @@ def hazard_matrix():
             "rank_mass_dose": sorted(has_smoke, key=lambda n: -has_smoke[n]["mass_deposited_ug_per_10min"])}
 
 
+# ==================== 7. FLAMMABILITY MODEL (machine learning on FLEX) ====================
+FLEX_FEATURES = ["heptane", "o2_frac", "co2_frac", "he_frac", "pressure_mmhg", "d0_mm"]
+
+
+def fit_flammability():
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import mean_absolute_error, r2_score, roc_auc_score
+    from sklearn.model_selection import GroupKFold, cross_val_predict
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    flex = pd.read_csv(DATA / "flex.csv")
+    flex = flex[flex["pressure_mmhg"] > 100].copy()
+    flex["heptane"] = (flex["fuel"] == "Heptane").astype(int)
+    flex["series"] = flex["flex_id"].str[:3]
+
+    ended = flex[flex["test_end"].isin(["Extinction", "Completion"])].dropna(subset=FLEX_FEATURES)
+    went_out = (ended["test_end"] == "Extinction").astype(int)
+    classifier = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+    held_out = cross_val_predict(classifier, ended[FLEX_FEATURES], went_out, cv=GroupKFold(5),
+                                 groups=ended["series"], method="predict_proba")[:, 1]
+    classifier.fit(ended[FLEX_FEATURES], went_out)
+
+    rated = flex.dropna(subset=FLEX_FEATURES + ["burning_rate_mm2_s"])
+    regressor = RandomForestRegressor(200, min_samples_leaf=2, random_state=0)
+    held_out_rate = cross_val_predict(regressor, rated[FLEX_FEATURES], rated["burning_rate_mm2_s"],
+                                      cv=GroupKFold(5), groups=rated["series"])
+    regressor.fit(rated[FLEX_FEATURES], rated["burning_rate_mm2_s"])
+
+    return {"classifier": classifier, "regressor": regressor,
+            "ranges": {c: [float(rated[c].min()), float(rated[c].max())] for c in FLEX_FEATURES[1:]},
+            "metrics": {"extinction_tests": len(ended), "share_that_went_out": float(went_out.mean()),
+                        "extinction_auc": float(roc_auc_score(went_out, held_out)),
+                        "rate_tests": len(rated), "rate_r2": float(r2_score(rated["burning_rate_mm2_s"], held_out_rate)),
+                        "rate_mae_mm2_s": float(mean_absolute_error(rated["burning_rate_mm2_s"], held_out_rate)),
+                        "validation": "5-fold, whole test series held out together"}}
+
+
+FLAMMABILITY = fit_flammability()
+
+
+def flammability(fuel="Heptane", o2_frac=0.21, co2_frac=0.0, he_frac=0.0, pressure_mmhg=760.0, d0_mm=3.0):
+    row = pd.DataFrame([[int(fuel == "Heptane"), o2_frac, co2_frac, he_frac, pressure_mmhg, d0_mm]], columns=FLEX_FEATURES)
+    trees = np.array([t.predict(row.values)[0] for t in FLAMMABILITY["regressor"].estimators_])
+    outside = [c for c, (lo, hi) in FLAMMABILITY["ranges"].items() if not lo <= row[c][0] <= hi]
+    if o2_frac + co2_frac + he_frac > 1:
+        outside.append("gas fractions add up to more than 1")
+    return {"label": "Modeled (machine learning)",
+            "inputs": {"fuel": fuel, "o2_frac": o2_frac, "co2_frac": co2_frac, "he_frac": he_frac,
+                       "pressure_mmhg": pressure_mmhg, "d0_mm": d0_mm},
+            "probability_flame_goes_out_early": float(FLAMMABILITY["classifier"].predict_proba(row)[0, 1]),
+            "burning_rate_mm2_s": float(trees.mean()),
+            "burning_rate_band_10_90": [float(np.percentile(trees, 10)), float(np.percentile(trees, 90))],
+            "outside_tested_range": outside,
+            "metrics": FLAMMABILITY["metrics"], "tested_ranges": FLAMMABILITY["ranges"],
+            "source": "PSI-69 (FLEX droplet tests)",
+            "limits": "Trained on single fuel droplets only. It interpolates inside the tested conditions and says nothing about solid materials."}
+
+
 if __name__ == "__main__":
     import json
     print(json.dumps(AGING, indent=1))
-    print(json.dumps(exposure("Kapton", 0.01, 0, "rest", "1g"), indent=1, default=float))
-    m = hazard_matrix()
-    print(json.dumps({k: m[k] for k in ["gaps", "rank_alveolar_fraction", "rank_mass_dose"]}, indent=1))
+    print(json.dumps(flammability(), indent=1))
+    print(json.dumps(flammability("Heptane", 0.30, 0, 0, 527, 3), indent=1))

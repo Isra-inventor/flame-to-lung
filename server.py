@@ -19,7 +19,8 @@ def clean(x):
 def index():
     counts = {t: len(pd.read_csv(ROOT / "data" / "processed" / f"{t}.csv")) for t in assistant.TABLES}
     return render_template("index.html", counts=counts, stages=STAGES, questions=assistant.DEMO_QUESTIONS,
-                           materials=list(engine.SMOKE_NAME), aging=engine.AGING)
+                           materials=list(engine.SMOKE_NAME), aging=engine.AGING,
+                           ml=engine.FLAMMABILITY["metrics"])
 
 
 # ==================== DATA ====================
@@ -46,16 +47,17 @@ def exposure():
     return jsonify(clean(out | {"curves": curves}))
 
 
-@app.post("/api/aging")
-def aging():
+@app.post("/api/flammability")
+def flammability():
     a = request.json
-    series = []
-    for minute in range(0, 31):
-        e = engine.exposure(a["material"], float(a["dilution"]), minute, "rest", "1g")
-        series.append({"minute": minute, "number_conc_per_cm3": e["aged_smoke"]["number_conc_per_cm3"],
-                       "gmd_um": e["aged_smoke"]["gmd_um"], "gmd_um_empirical": e["aged_smoke"]["gmd_um_empirical_exponent"],
-                       "alveolar_fraction_by_count": e["fraction_by_count"]["AL"]})
-    return jsonify(clean({"series": series, "fit": engine.AGING}))
+    args = [a["fuel"], float(a["o2_pct"]) / 100, float(a["co2_pct"]) / 100, float(a["he_pct"]) / 100, float(a["pressure_mmhg"]), float(a["d0_mm"])]
+    out = engine.flammability(*args)
+    out["oxygen_sweep"] = []
+    for o2 in range(12, 35):
+        e = engine.flammability(args[0], o2 / 100, *args[2:])
+        out["oxygen_sweep"].append({"o2_pct": o2, "p_out": e["probability_flame_goes_out_early"],
+                                    "rate": e["burning_rate_mm2_s"], "band": e["burning_rate_band_10_90"]})
+    return jsonify(clean(out))
 
 
 # ==================== ASSISTANT ====================

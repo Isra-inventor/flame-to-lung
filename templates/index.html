@@ -9,19 +9,19 @@
 <body>
   <canvas id="space" aria-hidden="true"></canvas>
 
-  <!-- ==================== CHAPTER RAIL ==================== -->
-  <nav class="rail" aria-label="Chapters">
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="rail" aria-label="Pages">
     <a href="#top" class="rail-mark">F→L</a>
-    <a href="#lifecycle" data-nav="lifecycle"><i>01</i><span>Lifecycle</span></a>
+    <a href="#investigations" data-nav="investigations"><i>01</i><span>Investigations</span></a>
     <a href="#materials" data-nav="materials"><i>02</i><span>Materials</span></a>
-    <a href="#exposure" data-nav="exposure"><i>03</i><span>Crew exposure</span></a>
-    <a href="#aging" data-nav="aging"><i>04</i><span>Smoke aging</span></a>
+    <a href="#lung" data-nav="lung"><i>03</i><span>Lung model</span></a>
+    <a href="#flammability" data-nav="flammability"><i>04</i><span>Flammability model</span></a>
     <a href="#assistant" data-nav="assistant"><i>05</i><span>Assistant</span></a>
   </nav>
 
   <main>
-    <!-- ==================== HERO ==================== -->
-    <section id="top" class="hero" data-scene="hero">
+    <!-- ==================== HOME ==================== -->
+    <section id="top" class="page hero" data-scene="hero">
       <p class="kicker">NASA Space Apps 2026 · Flame in Freefall</p>
       <h1>Flame<br><em>to</em> Lung</h1>
       <p class="lede">In orbit a flame is a slow blue sphere, and its smoke never rises.
@@ -33,23 +33,40 @@
         <div><dt>solid-fuel tests</dt><dd>{{ counts.bass + counts.bass2 }}</dd><small>BASS, BASS-II · PSI-26, 25</small></div>
         <div><dt>large-fire samples</dt><dd>{{ counts.saffire }}</dd><small>Saffire · PSI-98–100</small></div>
       </dl>
-      <a class="scroll-cue" href="#lifecycle">scroll to follow the smoke ↓</a>
+      <ol class="tour">
+        <li><a href="#investigations"><b>Investigations</b>What NASA burned, how, and what each test taught.</a></li>
+        <li><a href="#materials"><b>Materials</b>Which materials burn, which make dangerous smoke, and where data is missing.</a></li>
+        <li><a href="#lung"><b>Lung model</b>Predicts where smoke lands in a crew member's lungs.</a></li>
+        <li><a href="#flammability"><b>Flammability model</b>Predicts whether a flame survives in a given atmosphere.</a></li>
+        <li><a href="#assistant"><b>Assistant</b>Ask questions; every number comes from the data or the models.</a></li>
+      </ol>
     </section>
 
-    <!-- ==================== 01 LIFECYCLE ==================== -->
-    <section id="lifecycle" data-scene="lifecycle">
+    <!-- ==================== 01 INVESTIGATIONS ==================== -->
+    <section id="investigations" class="page" data-scene="lifecycle" hidden>
       <header class="chapter"><span>01</span><h2>A fire has <em>a life</em></h2>
-        <p>Each NASA investigation studied one moment of it. Pick a stage.</p></header>
+        <p>Each NASA investigation studied one moment of it. Pick a stage to see what was tested and what it means for safety.</p></header>
       <div class="stages" role="tablist">
         {% for s in stages %}<button role="tab" data-stage="{{ s }}"><i>{{ loop.index }}</i>{{ s }}</button>{% endfor %}
       </div>
       <div id="cards" class="cards"></div>
+
+      <h3 class="sub">Side by side</h3>
+      <p class="note">What each investigation set out to do, what it burned, under which conditions, and with which hardware.</p>
+      <div class="matrix-wrap"><table id="compare" class="matrix compare"></table></div>
+      <p class="source">Ranges are read from our cleaned NASA tables. Not covered here: FLEX-2, the Cool Flames Investigation, SLICE, DAFT and the ACME gas-flame
+        experiments (BRE, CFI-G, E-FIELD Flames). PSI holds no partial-gravity combustion data yet, so nothing on this site is measured at lunar gravity.</p>
+      <a class="next" href="#materials">Next: materials →</a>
     </section>
 
     <!-- ==================== 02 MATERIALS ==================== -->
-    <section id="materials" data-scene="materials">
+    <section id="materials" class="page" data-scene="materials" hidden>
       <header class="chapter"><span>02</span><h2>Two rankings that <em>disagree</em></h2>
         <p>Will it burn, and what does its smoke do in a lung? NASA tested different materials for each question.</p></header>
+      <details class="guide"><summary>How to read this page</summary>
+        <ul><li>Each row is a material. The middle column is fire evidence; the right column is smoke evidence.</li>
+          <li>A hatched cell means these NASA datasets have nothing for that material. Only cotton and silicone have both.</li>
+          <li>The two bar charts rank the same five smokes two ways. Kapton sends the largest share of particles deep into the lung; silicone delivers the most mass.</li></ul></details>
       <div class="matrix-wrap">
         <table id="matrix" class="matrix"></table>
         <p class="note"><span class="swatch gap"></span> hatched = no data in these NASA datasets. Each gap is a test NASA could fly next.</p>
@@ -61,12 +78,21 @@
           <div id="rank-mass" class="plot short"></div></figure>
       </div>
       <p class="source">Smoke: SAME, PSI-101. Burn outcomes: BASS PSI-26 (keyword reading of crew notes), Saffire PSI-98/99/100. Deposition: ICRP 66 / Hinds 1999.</p>
+      <a class="next" href="#lung">Next: lung model →</a>
     </section>
 
-    <!-- ==================== 03 CREW EXPOSURE ==================== -->
-    <section id="exposure" data-scene="exposure">
+    <!-- ==================== 03 LUNG MODEL ==================== -->
+    <section id="lung" class="page" data-scene="exposure" hidden>
       <header class="chapter"><span>03</span><h2>What the crew <em>breathes</em></h2>
-        <p>Choose a material and a scenario. The lung lights up where the smoke lands.</p></header>
+        <p>A physics model that turns NASA's smoke measurements into a dose in each part of the lung.</p></header>
+
+      <ol class="steps">
+        <li><b>NASA measured the smoke</b>For each overheated material, SAME recorded how many particles there are and how big. Smoke is a mix of sizes, mostly 0.05 to 0.5 µm.</li>
+        <li><b>Smoke changes as it drifts</b>Particles collide and stick, so there are fewer, larger ones. We fitted that rate to {{ aging.n_pairs }} fresh/aged SAME pairs. Diluted smoke ages slowly.</li>
+        <li><b>Every size has a fate</b>The ICRP 66 lung model gives the chance a particle of each size sticks in each region. Big ones hit the nose and throat; tiny ones wander into the alveoli; those near 0.3 µm are mostly breathed back out.</li>
+        <li><b>Gravity shifts it</b>Settling under gravity matters for 0.5 to 3 µm particles. Without it, fewer of those deposit. Reduced gravity is shown as a band, not one number.</li>
+      </ol>
+
       <div class="split">
         <div>
           <div class="lung-space"></div>
@@ -87,46 +113,75 @@
             <div><dt>particles reaching alveoli</dt><dd id="r-count">–</dd><small>per minute <b class="tag modeled">Modeled</b></small></div>
             <div><dt>mass deposited</dt><dd id="r-mass">–</dd><small>µg per 10 minutes <b class="tag modeled">Modeled</b></small></div>
           </div>
+          <p id="r-aged" class="note"></p>
           <p id="r-band" class="note"></p>
         </div>
       </div>
+
+      <dl class="glossary">
+        <div><dt><span class="dot" style="background:var(--ha)"></span>Head airways</dt><dd>Nose, mouth and throat. Catches large particles; cleared quickly by mucus and swallowing.</dd></div>
+        <div><dt><span class="dot" style="background:var(--tb)"></span>Bronchi</dt><dd>The branching air tubes. Particles here are carried back up by mucus.</dd></div>
+        <div><dt><span class="dot" style="background:var(--al)"></span>Alveoli</dt><dd>The air sacs where oxygen enters the blood. No mucus here, so particles stay longest.</dd></div>
+      </dl>
+
       <figure><figcaption>Where each particle size lands, and the sizes in this smoke <b class="tag modeled">Modeled</b></figcaption>
-        <div id="curve" class="plot"></div></figure>
+        <div id="curve" class="plot"></div>
+        <p class="note">Read it like this: the grey hill at the bottom is the smoke you selected. Look straight up from it to see which coloured curve is highest at those sizes.
+          That region receives most of the deposit. The 3D lung is an illustration; only the brightness of each region comes from the model.</p></figure>
       <p class="source" id="r-source"></p>
+      <p class="source">Aging fit: K = {{ '%.1e' % aging.K_pooled_cm3_s }} cm³/s pooled over {{ aging.n_pairs }} pairs; when one pair is held out, its particle count is predicted within
+        {{ '%.0f' % aging.validation.number_conc_mean_abs_pct_error }}% on average. {{ aging.note }}</p>
+      <a class="next" href="#flammability">Next: flammability model →</a>
     </section>
 
-    <!-- ==================== 04 SMOKE AGING ==================== -->
-    <section id="aging" data-scene="aging">
-      <header class="chapter"><span>04</span><h2>Smoke <em>grows old</em></h2>
-        <p>Particles collide and stick. Fewer, larger particles means a different dose. Dense smoke ages fast; diluted smoke barely changes.</p></header>
+    <!-- ==================== 04 FLAMMABILITY MODEL ==================== -->
+    <section id="flammability" class="page" data-scene="flammability" hidden>
+      <header class="chapter"><span>04</span><h2>Will the flame <em>survive</em>?</h2>
+        <p>A machine-learning model trained on NASA's FLEX droplet burns. Set an atmosphere and it predicts how the flame behaves.</p></header>
+      <details class="guide" open><summary>How this model works</summary>
+        <ul><li><b>Trained on:</b> {{ ml.rate_tests }} FLEX tests on the ISS, each a single droplet of methanol or heptane burned in a chosen gas mixture.</li>
+          <li><b>It predicts two things:</b> the chance the flame goes out before the fuel is used up, and how fast the droplet burns.</li>
+          <li><b>How good is it:</b> tested on whole test series it never saw. It ranks "goes out" versus "burns to the end" correctly {{ '%.0f' % (ml.extinction_auc * 100) }}% of the time (AUC),
+            and predicts burning rate within {{ '%.2f' % ml.rate_mae_mm2_s }} mm²/s on average (R² {{ '%.2f' % ml.rate_r2 }}).</li>
+          <li><b>Limits:</b> fuel droplets only, not solid materials, and only inside the tested conditions. In FLEX, {{ '%.0f' % (ml.share_that_went_out * 100) }}% of flames went out early, so high values are normal.</li></ul></details>
       <div class="split">
-        <div class="lung-space"></div>
-        <div class="panel">
-          <div class="control"><label>Material</label><div class="seg" data-key="agingMaterial">
-            {% for m in materials %}<button data-v="{{ m }}">{{ m }}</button>{% endfor %}</div></div>
-          <div class="control"><label>Concentration</label><div class="seg" data-key="agingDilution">
-            <button data-v="1">source</button><button data-v="0.1">1/10</button><button data-v="0.01">1/100</button></div></div>
-          <div class="control"><label>Minutes <output id="age-out">0</output></label>
-            <input id="age" type="range" min="0" max="30" value="0"></div>
-          <div class="readout three">
-            <div><dt>particle size</dt><dd id="a-gmd">–</dd><small>µm, geometric mean</small></div>
-            <div><dt>particles left</dt><dd id="a-n">–</dd><small>of the starting count</small></div>
-            <div><dt>reaching alveoli</dt><dd id="a-al">–</dd><small>of inhaled particles</small></div>
+        <div class="flame-side">
+          <div class="flame-space"></div>
+          <div class="readout">
+            <div><dt>chance the flame goes out early</dt><dd id="f-out">–</dd><small>before the fuel is used up <b class="tag modeled">Modeled</b></small></div>
+            <div><dt>burning rate</dt><dd id="f-rate">–</dd><small id="f-band">mm²/s</small></div>
           </div>
+          <p id="f-warn" class="note"></p>
+          <figure><figcaption>The same droplet across oxygen levels <b class="tag modeled">Modeled</b></figcaption>
+            <div id="flam-plot" class="plot"></div></figure>
+        </div>
+        <div class="panel">
+          <div class="control"><label>Start from</label><div class="seg" id="presets">
+            <button data-o2="21" data-p="760">ISS cabin air</button><button data-o2="30" data-p="527">Moon base scenario</button></div>
+            <small>Moon base: NASA expects about 30% oxygen or more at 10.2 psi or less (challenge brief).</small></div>
+          <div class="control"><label>Fuel</label><div class="seg" data-key="fuel">
+            <button data-v="Heptane">Heptane</button><button data-v="Methanol">Methanol</button></div></div>
+          <div class="control"><label>Oxygen <output data-for="o2">21</output></label><input id="o2" type="range" min="12" max="34" value="21"></div>
+          <div class="control"><label>Carbon dioxide <small>suppressant gas</small> <output data-for="co2">0</output></label><input id="co2" type="range" min="0" max="70" value="0"></div>
+          <div class="control"><label>Helium <small>suppressant gas</small> <output data-for="he">0</output></label><input id="he" type="range" min="0" max="45" value="0"></div>
+          <div class="control"><label>Pressure <output data-for="pressure">760</output></label><input id="pressure" type="range" min="527" max="2300" step="1" value="760"></div>
+          <div class="control"><label>Droplet diameter <output data-for="d0">3</output></label><input id="d0" type="range" min="1.1" max="4.6" step="0.1" value="3"></div>
         </div>
       </div>
-      <figure><figcaption>Thirty minutes of drifting smoke <b class="tag modeled">Modeled</b></figcaption>
-        <div id="age-plot" class="plot"></div></figure>
-      <p class="source">Coagulation coefficient fitted to {{ aging.n_pairs }} fresh/aged SAME pairs (PSI-101):
-        K = {{ '%.1e' % aging.K_pooled_cm3_s }} cm³/s pooled. Leave-one-out error: particle count
-        {{ '%.0f' % aging.validation.number_conc_mean_abs_pct_error }}%, size
-        {{ '%.3f' % aging.validation.gmd_mae_um_volume_conserving }} µm. {{ aging.note }}</p>
+      <p class="source">Training data: NASA PSI-69 (FLEX). Models: logistic regression (goes out early) and random forest (burning rate), scikit-learn, trained each time the server starts.
+        Validation: {{ ml.validation }}.</p>
+      <a class="next" href="#assistant">Next: assistant →</a>
     </section>
 
     <!-- ==================== 05 ASSISTANT ==================== -->
-    <section id="assistant" data-scene="assistant">
+    <section id="assistant" class="page" data-scene="assistant" hidden>
       <header class="chapter"><span>05</span><h2>Ask <em>the data</em></h2>
-        <p>The language model may only quote numbers returned by the tools: NASA tables and the physics engine.</p></header>
+        <p>The language model may only quote numbers returned by its tools: the NASA tables, the lung model and the flammability model.</p></header>
+      <details class="guide"><summary>How to read an answer</summary>
+        <ul><li><b class="tag measured">Measured</b> comes straight from a NASA table.</li>
+          <li><b class="tag modeled">Modeled</b> comes from the lung model or the flammability model.</li>
+          <li><b class="tag recommendation">Recommendation</b> is the assistant's advice, not data.</li>
+          <li>Open "tool calls" under any answer to see exactly what was looked up.</li></ul></details>
       <div class="chips">{% for q in questions %}<button>{{ q }}</button>{% endfor %}</div>
       <div id="chat" class="chat" aria-live="polite"></div>
       <form id="ask" class="ask">

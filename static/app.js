@@ -123,13 +123,13 @@ function buildScene() {
     lifecycle: { flame: [0.37, 0.3, 0.5, 0.5], lung: [-0.2, 0, 0.7, 0] },
     materials: { flame: [0.44, 0.4, 0.22, 0.12], lung: [-0.2, 0, 0.8, 0] },
     exposure:  { flame: [0.46, 0.42, 0.16, 0.2], lung: [-0.19, -0.05, 0.8, 1] },
-    aging:     { flame: [0.46, 0.42, 0.16, 0.2], lung: [-0.19, -0.05, 0.8, 0.85] },
+    flammability: { flame: [-0.2, 0.2, 0.62, 1], lung: [0.3, 0, 0.7, 0] },
     assistant: { flame: [0.4, -0.3, 0.4, 0.3], lung: [0.3, 0.05, 0.85, 0.16] },
   };
-  let pose = POSES.hero, pointer = [0, 0], anchor = null;
+  let pose = POSES.hero, pointer = [0, 0], anchor = {};
   const now = { flame: [...pose.flame], lung: [...pose.lung] };
   const levels = new THREE.Vector3(0.3, 0.3, 0.3), levelTarget = levels.clone();
-  let grow = 1;
+  let grow = 1, vigor = 1, vigorNow = 1;
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function resize() {
@@ -148,18 +148,19 @@ function buildScene() {
     for (const [name, mesh] of [["flame", flame], ["lung", lung]]) {
       const target = pose[name], cur = now[name];
       for (let i = 0; i < 4; i++) cur[i] += (target[i] - cur[i]) * 0.06;
-      const box = name === "lung" && anchor ? anchor.getBoundingClientRect() : null;
+      const box = anchor[name] ? anchor[name].getBoundingClientRect() : null;
       if (box) {
         mesh.position.set(((box.left + box.width / 2) / innerWidth - 0.5) * viewW, -((box.top + box.height / 2) / innerHeight - 0.5) * viewH, 0);
-        mesh.scale.setScalar(Math.min(box.height / innerHeight * viewH / 4.9, box.width / innerWidth * viewW / 4.2));
+        mesh.scale.setScalar(name === "lung" ? Math.min(box.height / innerHeight * viewH / 4.9, box.width / innerWidth * viewW / 4.2) : box.height / innerHeight * viewH / 3.4 * vigorNow);
       } else {
         mesh.position.set((narrow && name === "lung" ? 0 : cur[0]) * viewW, cur[1] * viewH, 0);
-        mesh.scale.setScalar(cur[2] * (name === "lung" ? Math.min(1, viewH / 6.4) : Math.min(1.1, viewW / 9)));
+        mesh.scale.setScalar(cur[2] * (name === "lung" ? Math.min(1, viewH / 6.4) : Math.min(1.1, viewW / 9) * (pose === POSES.flammability ? vigorNow : 1)));
       }
       mesh.material.uniforms.uOpacity.value = cur[3];
       mesh.visible = cur[3] > 0.01;
     }
     levels.lerp(levelTarget, 0.08);
+    vigorNow += (vigor - vigorNow) * 0.06;
     lung.material.uniforms.uLevels.value.copy(levels);
     smoke.material.uniforms.uGrow.value += (grow - smoke.material.uniforms.uGrow.value) * 0.08;
     lung.rotation.y = (still ? 0.35 : Math.sin(t * 0.25) * 0.55) + pointer[0] * 0.5;
@@ -176,21 +177,26 @@ function buildScene() {
   requestAnimationFrame(frame);
 
   return {
-    setPose: (name, section) => { pose = POSES[name] || pose; anchor = section.querySelector(".lung-space"); },
+    setPose: (name, section) => { pose = POSES[name] || pose; anchor = { lung: section.querySelector(".lung-space"), flame: section.querySelector(".flame-space") }; },
     setDeposition: f => levelTarget.set(...["HA", "TB", "AL"].map(k => Math.min(1, Math.sqrt(f[k] / 0.3)))),
     setSmokeSize: ratio => grow = ratio,
+    setFlame: strength => vigor = strength,
   };
 }
-let scene3d = { setPose() {}, setDeposition() {}, setSmokeSize() {} };
+let scene3d = { setPose() {}, setDeposition() {}, setSmokeSize() {}, setFlame() {} };
 try { scene3d = buildScene(); } catch (error) { report("3D scene is off (this browser has no WebGL); charts and assistant still work", error); }
 
-// ==================== CHAPTER TRACKING ====================
-const watcher = new IntersectionObserver(entries => entries.forEach(e => {
-  if (!e.isIntersecting) return;
-  scene3d.setPose(e.target.dataset.scene, e.target);
-  $$(".rail a[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === e.target.id));
-}), { rootMargin: "-45% 0px -45% 0px" });
-$$("section[data-scene]").forEach(s => watcher.observe(s));
+// ==================== PAGES ====================
+function showPage() {
+  const id = location.hash.slice(1), page = document.getElementById(id)?.classList.contains("page") ? document.getElementById(id) : $("#top");
+  $$(".page").forEach(p => p.hidden = p !== page);
+  $$(".rail a[data-nav]").forEach(a => a.classList.toggle("on", a.dataset.nav === page.id));
+  scene3d.setPose(page.dataset.scene, page);
+  scrollTo(0, 0);
+  $$(".js-plotly-plot", page).forEach(plot => Plotly.Plots.resize(plot));
+}
+addEventListener("hashchange", showPage);
+showPage();
 
 // ==================== CHART STYLE ====================
 const axis = extra => ({ gridcolor: GRID, linecolor: "rgba(238,240,242,.25)", zeroline: false, ticks: "outside", ticklen: 4, tickcolor: "rgba(238,240,242,.25)", ...extra });
@@ -215,6 +221,9 @@ function showStage(stage) {
     </article>`).join("");
 }
 $$(".stages button").forEach(b => b.onclick = () => showStage(b.dataset.stage));
+const COLUMNS = { objective: "Objective", fuel: "Fuel and sample", conditions: "Test conditions", variables: "What varied", measurements: "What was measured", hardware: "Hardware" };
+$("#compare").innerHTML = `<tr><th>Investigation</th>${Object.values(COLUMNS).map(c => `<th>${c}</th>`).join("")}</tr>` +
+  cards.filter(c => c.compare).map(c => `<tr><td>${c.compare.name}<small>${c.psi_id}</small></td>${Object.keys(COLUMNS).map(k => `<td>${c.compare[k]}</td>`).join("")}</tr>`).join("");
 showStage("overheating");
 
 // ==================== 02 MATERIALS ====================
@@ -246,10 +255,10 @@ rankBars("rank-mass", matrix.rank_mass_dose, s => s.mass_deposited_ug_per_10min,
 } catch (error) { report("materials", error); }
 
 // ==================== 03 CREW EXPOSURE ====================
-const state = { material: "Kapton", dilution: "0.01", activity: "rest", gravity: "microgravity", agingMaterial: "Silicone", agingDilution: "1" };
-$$(".seg").forEach(seg => {
+const state = { material: "Kapton", dilution: "0.01", activity: "rest", gravity: "microgravity", fuel: "Heptane" };
+$$(".seg[data-key]").forEach(seg => {
   const key = seg.dataset.key, paint = () => $$("button", seg).forEach(b => b.classList.toggle("on", b.dataset.v === state[key]));
-  $$("button", seg).forEach(b => b.onclick = () => { state[key] = b.dataset.v; paint(); key.startsWith("aging") ? loadAging() : loadExposure(); });
+  $$("button", seg).forEach(b => b.onclick = () => { state[key] = b.dataset.v; paint(); key === "fuel" ? loadFlammability() : loadExposure(); });
   paint();
 });
 $("#minutes").oninput = () => { $("#minutes-out").textContent = $("#minutes").value; loadExposure(); };
@@ -263,6 +272,10 @@ async function loadExposure() {
     <small>of inhaled particles · ${pct(e.fraction_by_mass[k])} of inhaled mass</small></li>`).join("");
   $("#r-count").textContent = big(e.alveolar_particles_per_min);
   $("#r-mass").textContent = sig(e.mass_deposited_ug_per_10min, 3);
+  const left = e.aged_smoke.number_conc_per_cm3 / (e.measured_source_smoke.number_conc_per_cm3 * e.inputs.dilution);
+  $("#r-aged").textContent = e.inputs.minutes > 0
+    ? `After ${e.inputs.minutes} min: particles grew from ${sig(e.measured_source_smoke.gmd_um, 2)} to ${sig(e.aged_smoke.gmd_um, 2)} µm and ${pct(left)} of them are left.`
+    : `Fresh smoke: ${sig(e.measured_source_smoke.gmd_um, 2)} µm particles. Move the minutes slider to age it.`;
   const low = e.band_low_gravity_effect;
   $("#r-band").textContent = low
     ? `Reduced-gravity band: alveoli ${pct(e.fraction_by_count.AL)} to ${pct(low.fraction_by_count.AL)} of particles, ${sig(e.mass_deposited_ug_per_10min, 3)} to ${sig(low.mass_deposited_ug_per_10min, 3)} µg. The lower gravity effect is our assumption (half the calibrated one).`
@@ -283,31 +296,31 @@ async function loadExposure() {
   });
 }
 
-// ==================== 04 SMOKE AGING ====================
-let aging = null;
-async function loadAging() {
-  aging = await post("/api/aging", { material: state.agingMaterial, dilution: state.agingDilution });
-  showAge();
-}
-function showAge() {
-  const m = +$("#age").value, s = aging.series, row = s[m], x = s.map(r => r.minute);
-  $("#age-out").textContent = m;
-  $("#a-gmd").textContent = sig(row.gmd_um, 3);
-  $("#a-n").textContent = pct(row.number_conc_per_cm3 / s[0].number_conc_per_cm3).replace(".0", "");
-  $("#a-al").textContent = pct(row.alveolar_fraction_by_count);
-  scene3d.setSmokeSize(row.gmd_um / s[0].gmd_um);
-  draw("age-plot", [
-    { x, y: s.map(r => r.gmd_um), name: "size, volume-conserving model", mode: "lines", line: { color: "#3987e5", width: 2 }, hovertemplate: "%{y:.3f} µm at %{x} min<extra>volume-conserving</extra>" },
-    { x, y: s.map(r => r.gmd_um_empirical), name: "size, exponent fitted to SAME", mode: "lines", line: { color: "#c98500", width: 2, dash: "dot" }, hovertemplate: "%{y:.3f} µm at %{x} min<extra>fitted exponent</extra>" },
-    { x, y: s.map(r => r.alveolar_fraction_by_count), yaxis: "y2", name: "share reaching alveoli", mode: "lines", line: { color: "#199e70", width: 2 }, hovertemplate: "%{y:.1%} at %{x} min<extra>alveoli</extra>" },
+// ==================== 04 FLAMMABILITY MODEL ====================
+const SLIDERS = { o2: v => v + "%", co2: v => v + "%", he: v => v + "%", pressure: v => `${v} mmHg · ${(v / 760).toFixed(2)} atm`, d0: v => v + " mm" };
+async function loadFlammability() {
+  Object.entries(SLIDERS).forEach(([id, show]) => $(`output[data-for=${id}]`).textContent = show($("#" + id).value));
+  const f = await post("/api/flammability", { fuel: state.fuel, o2_pct: $("#o2").value, co2_pct: $("#co2").value, he_pct: $("#he").value, pressure_mmhg: $("#pressure").value, d0_mm: $("#d0").value });
+  $("#f-out").textContent = Math.round(100 * f.probability_flame_goes_out_early) + "%";
+  $("#f-rate").textContent = f.burning_rate_mm2_s.toFixed(2);
+  $("#f-band").innerHTML = `mm²/s · likely ${f.burning_rate_band_10_90.map(v => v.toFixed(2)).join(" to ")} <b class="tag modeled">Modeled</b>`;
+  $("#f-warn").textContent = f.outside_tested_range.length ? "Outside what FLEX tested (" + f.outside_tested_range.join(", ") + "). Treat this prediction as unreliable." : "Inside the conditions FLEX tested.";
+  scene3d.setFlame(0.35 + 1.1 * f.burning_rate_mm2_s * (1 - 0.6 * f.probability_flame_goes_out_early));
+  const sweep = f.oxygen_sweep, x = sweep.map(r => r.o2_pct), now = +$("#o2").value;
+  draw("flam-plot", [
+    { x, y: sweep.map(r => r.p_out), name: "chance flame goes out early", mode: "lines", line: { color: "#3987e5", width: 2 }, hovertemplate: "%{y:.0%} at %{x}% oxygen<extra>goes out early</extra>" },
+    { x: [...x, ...[...x].reverse()], y: [...sweep.map(r => r.band[1]), ...[...sweep].reverse().map(r => r.band[0])], yaxis: "y2", fill: "toself", fillcolor: "rgba(217,89,38,.18)",
+      line: { width: 0 }, hoverinfo: "skip", name: "likely range", showlegend: false },
+    { x, y: sweep.map(r => r.rate), yaxis: "y2", name: "burning rate", mode: "lines", line: { color: "#d95926", width: 2 }, hovertemplate: "%{y:.2f} mm²/s at %{x}% oxygen<extra>burning rate</extra>" },
   ], {
-    xaxis: axis({ title: { text: "minutes since release" }, anchor: "y2", range: [0, 30] }),
-    yaxis: axis({ domain: [0.56, 1], title: { text: "particle size (µm)" } }),
-    yaxis2: axis({ domain: [0, 0.42], tickformat: ".0%", title: { text: "reaching alveoli" } }),
-    shapes: [{ type: "line", x0: m, x1: m, yref: "paper", y0: 0, y1: 1, line: { color: INK, width: 1, dash: "dot" } }],
+    xaxis: axis({ title: { text: "oxygen (%)" }, anchor: "y2", range: [12, 34] }),
+    yaxis: axis({ domain: [0.58, 1], tickformat: ".0%", range: [0, 1.02], title: { text: "goes out early" } }),
+    yaxis2: axis({ domain: [0, 0.42], rangemode: "tozero", title: { text: "burn rate (mm²/s)" } }),
+    shapes: [{ type: "line", x0: now, x1: now, yref: "paper", y0: 0, y1: 1, line: { color: INK, width: 1, dash: "dot" } }],
   });
 }
-$("#age").oninput = showAge;
+Object.keys(SLIDERS).forEach(id => $("#" + id).oninput = () => loadFlammability().catch(e => report("flammability", e)));
+$$("#presets button").forEach(b => b.onclick = () => { $("#o2").value = b.dataset.o2; $("#pressure").value = b.dataset.p; $("#co2").value = 0; $("#he").value = 0; loadFlammability(); });
 
 // ==================== 05 ASSISTANT ====================
 const escapeHtml = t => t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -328,4 +341,4 @@ $("#ask").onsubmit = e => { e.preventDefault(); ask($("#question").value); $("#q
 $$(".chips button").forEach(b => b.onclick = () => ask(b.textContent));
 
 loadExposure().catch(e => report("exposure", e));
-loadAging().catch(e => report("aging", e));
+loadFlammability().catch(e => report("flammability", e));
