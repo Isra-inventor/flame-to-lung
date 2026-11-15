@@ -1,0 +1,147 @@
+[
+  {
+    "id": "same",
+    "title": "SAME: Smoke Aerosol Measurement Experiment",
+    "psi_id": "PSI-102",
+    "stage": "soot",
+    "table": "same",
+    "what": "Spacecraft materials (Kapton, silicone rubber, cotton lampwick, Teflon, Pyrell foam, and liquid DBP) were overheated on the ISS and the smoke particles were measured with three instruments.",
+    "findings": [
+      "Our cleaned table holds 45 SAME runs and 109 SAME-R runs.",
+      "Smoke from overheating is made of sub-micrometre particles; median geometric mean diameters in the table run from about 0.08 um (Kapton) to about 0.16 um (silicone).",
+      "DBP is a liquid aerosol and its size moments were not reduced by NASA (20 rows, excluded from size models)."
+    ],
+    "safety_meaning": "Smoke detectors and crew masks must work for very small particles, and the particle size depends on which material is overheating.",
+    "sources": ["NASA PSI-102", "NASA PSI-101", "Urban et al., AIAA 2012", "Mulholland et al., Aerosol Sci. Tech. 2015"]
+  },
+  {
+    "id": "same-r",
+    "title": "SAME-R: smoke aging re-flight",
+    "psi_id": "PSI-101",
+    "stage": "crew exposure",
+    "table": "same",
+    "what": "The re-flight of SAME measured each smoke twice: fresh, and again after holding it in an aging chamber for several minutes (runs marked with an 'a', 58 aged readings).",
+    "findings": [
+      "Aged smoke has fewer, larger particles: particles collide and stick together (coagulation).",
+      "We fitted a coagulation coefficient from 43 fresh/aged pairs: about 8.8e-10 cm3/s (effective value, includes wall losses).",
+      "Silicone and Pyrell smoke carry the most mass; Kapton smoke has the smallest particles."
+    ],
+    "safety_meaning": "Smoke that lingers changes size, which changes how detectors see it and where it lands in the lungs.",
+    "sources": ["NASA PSI-101", "Mulholland et al., Aerosol Sci. Tech. 2015"]
+  },
+  {
+    "id": "flex",
+    "title": "FLEX: Flame Extinguishment Experiment",
+    "psi_id": "PSI-69",
+    "stage": "extinction",
+    "table": "flex",
+    "what": "Single droplets of methanol and heptane were burned on the ISS (2009 to 2011) in atmospheres with different oxygen levels, pressures, and diluent gases (nitrogen, carbon dioxide, helium) to learn what puts a flame out.",
+    "findings": [
+      "274 tests in the table: 157 methanol, 117 heptane.",
+      "186 tests ended in flame extinction, 61 in droplet disruption, 27 burned to completion.",
+      "Oxygen ranged from 0.12 to 0.34 mole fraction; CO2 up to 0.70 and helium up to 0.45 were used as diluents."
+    ],
+    "safety_meaning": "Shows how oxygen level and suppressant gas decide whether a flame goes out in microgravity, which guides the choice of extinguisher gas and cabin atmosphere.",
+    "sources": ["NASA PSI-69"]
+  },
+  {
+    "id": "flex-cool-flames",
+    "title": "FLEX discovery: cool flames",
+    "psi_id": "PSI-69",
+    "stage": "extinction",
+    "table": "flex",
+    "what": "During FLEX, some heptane droplets kept shrinking after the visible flame had gone out. The droplet was still burning with an invisible low-temperature 'cool flame'.",
+    "findings": [
+      "A fire that looks extinguished can keep reacting without a visible flame.",
+      "In the table, 'Visible flame extinction diameter' records the droplet size when the visible flame went out; fuel remained at that moment in extinction tests."
+    ],
+    "safety_meaning": "'No visible flame' does not prove a fire is out. Crews should keep monitoring for heat and combustion products after a fire appears extinguished.",
+    "sources": ["NASA PSI-69", "Nayagam et al., Combustion and Flame 159 (2012) 3583"]
+  },
+  {
+    "id": "bass",
+    "title": "BASS: Burning and Suppression of Solids",
+    "psi_id": "PSI-26",
+    "stage": "spread",
+    "table": "bass",
+    "what": "Small solid samples (cotton-fiberglass SIBAL fabric, PMMA plastic sheets, rods and spheres, wax candles, Nomex, Ultem) were ignited in a small flow duct on the ISS in 2012 and 2013, with the air flow turned down and nitrogen used to try to blow the flame out.",
+    "findings": [
+      "121 as-run tests in the table, with cabin oxygen from about 16% to 23%.",
+      "Outcomes were recorded as crew notes, not as a column; our 'outcome' field is a keyword reading of those notes.",
+      "Many samples kept burning at very low air flow, where flames turn dim and blue."
+    ],
+    "safety_meaning": "Flames in microgravity can survive in slow ventilation flows, so stopping the fans does not always stop a fire quickly.",
+    "sources": ["NASA PSI-26"]
+  },
+  {
+    "id": "bass-ii",
+    "title": "BASS-II: flame spread versus oxygen and flow",
+    "psi_id": "PSI-25",
+    "stage": "spread",
+    "table": "bass2",
+    "what": "A 2014 follow-up to BASS with six investigator teams, burning PMMA rods and films, SIBAL fabric and Nomex while varying oxygen (13.6% to 22.2% in the table) and air flow.",
+    "findings": [
+      "129 test log rows in the table across six principal investigators.",
+      "The NASA table is a test log; measured flame-spread rates are published in Link et al. 2018 and are not in our tables."
+    ],
+    "safety_meaning": "Maps the oxygen and flow limits where solid materials stop burning, which sets how low cabin oxygen or ventilation must go to be safe.",
+    "sources": ["NASA PSI-25", "Link et al., Sci. Rep. 8:120 (2018)"]
+  },
+  {
+    "id": "saffire-1-3",
+    "title": "Saffire-I and Saffire-III: a large fire in a spacecraft",
+    "psi_id": "PSI-98",
+    "stage": "spread",
+    "table": "saffire",
+    "what": "A large sheet of SIBAL cotton-fiberglass fabric (about 41 cm by 94 cm) was burned inside an uncrewed Cygnus cargo vehicle after it left the ISS, once with flow in the same direction as the flame (concurrent) and once against it (opposed).",
+    "findings": [
+      "Saffire-I used 20 cm/s air flow; Saffire-III used 30 cm/s.",
+      "These are the largest deliberate fires in the dataset, far bigger than the centimetre-scale ISS samples."
+    ],
+    "safety_meaning": "Tests whether small-sample results scale up to a realistic spacecraft fire.",
+    "sources": ["NASA PSI-98", "NASA PSI-100"]
+  },
+  {
+    "id": "saffire-2",
+    "title": "Saffire-II: nine materials side by side",
+    "psi_id": "PSI-99",
+    "stage": "spread",
+    "table": "saffire",
+    "what": "Nine smaller samples (silicone at four thicknesses, SIBAL fabric, PMMA, and a PMMA-Nomex pair) were ignited in a Cygnus vehicle at 20 cm/s air flow, and compared with the same tests on the ground.",
+    "findings": [
+      "All four silicone samples show a microgravity burn length of about 0, while three of them burned in normal gravity.",
+      "SIBAL fabric burned its full 29 cm length in microgravity.",
+      "In the PMMA-Nomex sample the PMMA was consumed but the Nomex did not ignite."
+    ],
+    "safety_meaning": "A material's flammability ranking on Earth does not carry over directly to microgravity; some materials are safer, and that has to be tested.",
+    "sources": ["NASA PSI-99"]
+  },
+  {
+    "id": "spice",
+    "title": "SPICE: Smoke Point In Co-flow Experiment",
+    "psi_id": "PSI-107",
+    "stage": "soot",
+    "table": null,
+    "what": "Gas-jet flames were burned on the ISS to find the smoke point: the flame length at which a flame starts releasing soot.",
+    "findings": [
+      "The smoke point datasheet is available from NASA PSI but is not processed into our tables, so we report no numbers from it."
+    ],
+    "safety_meaning": "Smoke point tells how readily a fuel makes soot, which affects both smoke detection and what the crew breathes.",
+    "sources": ["NASA PSI-107"]
+  },
+  {
+    "id": "lung-model",
+    "title": "Model card: where smoke lands in the lungs",
+    "psi_id": null,
+    "stage": "crew exposure",
+    "table": null,
+    "what": "Our crew-exposure model combines SAME particle sizes with the ICRP 66 lung deposition model (Hinds' equations) and a gravity correction.",
+    "findings": [
+      "Particles near 0.3 um deposit least; smaller particles deposit by diffusion and reach the alveoli.",
+      "Gravity (sedimentation) matters for particles of roughly 0.5 to 3 um and hardly at all below 0.2 um, so fresh smoke deposits almost the same in microgravity as on Earth.",
+      "In lunar gravity, deposition of 0.5 and 1 um particles is lower than on Earth; in microgravity what does deposit shifts toward the lung periphery."
+    ],
+    "safety_meaning": "Deposition is not toxicity, and gases such as CO or HF are not modelled. Results are for an average adult and are labelled Modeled.",
+    "sources": ["ICRP Publication 66 (1994)", "Hinds, Aerosol Technology (1999)", "Darquenne & Prisk 2008, doi:10.1007/s00421-008-0766-y", "Darquenne et al. 2014, J Appl Physiol 117:880"]
+  }
+]
