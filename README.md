@@ -27,6 +27,14 @@ In GitHub Codespaces you can skip the venv: `pip install -r requirements.txt`, t
 
 Everything except the Assistant chapter works without a key.
 
+## Host it
+
+On a host such as Render, create a Python web service from this repo with:
+
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn server:app --timeout 180 --workers 1 --threads 4`
+- Environment variable: `OPENROUTER_API_KEY` = your key (set it in the host's settings, never in the repo)
+
 ## What is in the repo
 
 | File | What it does |
