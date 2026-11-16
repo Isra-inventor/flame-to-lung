@@ -15,8 +15,9 @@
     <a href="#investigations" data-nav="investigations"><i>01</i><span>Investigations</span></a>
     <a href="#materials" data-nav="materials"><i>02</i><span>Materials</span></a>
     <a href="#science" data-nav="science"><i>03</i><span>Flame science</span></a>
-    <a href="#simulator" data-nav="simulator"><i>04</i><span>Simulator</span></a>
-    <a href="#assistant" data-nav="assistant"><i>05</i><span>Assistant</span></a>
+    <a href="#simulator" data-nav="simulator"><i>04</i><span>Flame simulator</span></a>
+    <a href="#lung" data-nav="lung"><i>05</i><span>Lung model</span></a>
+    <a href="#assistant" data-nav="assistant"><i>06</i><span>Assistant</span></a>
   </nav>
 
   <main>
@@ -33,13 +34,29 @@
         <div><dt>solid-fuel tests</dt><dd>{{ counts.bass + counts.bass2 }}</dd><small>BASS, BASS-II · PSI-26, 25</small></div>
         <div><dt>large-fire samples</dt><dd>{{ counts.saffire }}</dd><small>Saffire · PSI-98–100</small></div>
       </dl>
-      <ol class="tour">
-        <li><a href="#investigations"><b>Investigations</b>What NASA burned, how, and what each test taught.</a></li>
-        <li><a href="#materials"><b>Materials</b>Which materials burn, which make dangerous smoke, and where data is missing.</a></li>
-        <li><a href="#science"><b>Flame science</b>Fuels, diluent gases, cool flames and soot, straight from the measurements.</a></li>
-        <li><a href="#simulator"><b>Simulator</b>Set the conditions; see the flame, the smoke in the lungs, and how to make it safer.</a></li>
-        <li><a href="#assistant"><b>Assistant</b>Ask questions; every number comes from the data or the models.</a></li>
-      </ol>
+      <div class="map" aria-label="Site map">
+        <p class="map-title">Where to go</p>
+        <div class="map-group">
+          <h3>See the evidence</h3><p>What NASA measured. Nothing predicted.</p>
+          <a href="#investigations"><i>01</i><b>Investigations</b>Each experiment: what was burned, how, and what it taught.</a>
+          <a href="#materials"><i>02</i><b>Materials</b>Which materials burn, which make dangerous smoke, where data is missing.</a>
+          <a href="#science"><i>03</i><b>Flame science</b>Fuels, diluent gases, cool flames and soot.</a>
+        </div>
+        <div class="map-group">
+          <h3>Run the models</h3><p>Change the conditions and watch the result.</p>
+          <a href="#simulator"><i>04</i><b>Flame simulator</b>Will the flame survive? What would make it safer?</a>
+          <a href="#lung"><i>05</i><b>Lung model</b>Where the smoke lands in a crew member's lungs.</a>
+        </div>
+        <div class="map-group">
+          <h3>Ask a question</h3><p>In plain language, with sources.</p>
+          <a href="#assistant"><i>06</i><b>Assistant</b>A chat that answers only from the data and the two models.</a>
+        </div>
+        <dl class="paths">
+          <div><dt>New to the topic?</dt><dd>Go 01 → 03 → 04 → 05, about five minutes.</dd></div>
+          <div><dt>Researcher?</dt><dd>Start at 03 for the measurements, then test conditions in 04.</dd></div>
+          <div><dt>Short on time?</dt><dd>Open 04, press "Moon base scenario", then ask the assistant why.</dd></div>
+        </dl>
+      </div>
     </section>
 
     <!-- ==================== 01 INVESTIGATIONS ==================== -->
@@ -111,22 +128,18 @@
       <figure><div id="soot-plot" class="plot short"></div>
         <p class="note" id="soot-note"></p></figure>
       <p class="source">FLEX: NASA PSI-69. SPICE: NASA PSI-107, ISS tests only. Cool flames: Nayagam et al., Combustion and Flame 159 (2012). The three explanation steps summarize published findings; the charts are from the tables.</p>
-      <a class="next" href="#simulator">Next: simulator →</a>
+      <a class="next" href="#simulator">Next: flame simulator →</a>
     </section>
 
     <!-- ==================== 04 SIMULATOR ==================== -->
     <section id="simulator" class="page" data-scene="simulator" hidden>
       <header class="chapter"><span>04</span><h2>Run a <em>fire</em></h2>
-        <p>Set the conditions. The simulator shows how the flame behaves, flags hidden danger, suggests what would make it safer, then follows the smoke into the lungs.</p></header>
+        <p>Set the conditions. The simulator shows how the flame behaves, flags hidden danger, and suggests what would make it safer.</p></header>
       <details class="guide"><summary>How the simulator works</summary>
-        <ul><li><b>Part 1, the flame,</b> is machine learning trained on {{ ml.rate_tests }} FLEX droplet burns. It predicts three things: the chance the hot flame goes out early
+        <ul><li><b>The flame model</b> is machine learning trained on {{ ml.rate_tests }} FLEX droplet burns. It predicts three things: the chance the hot flame goes out early
             (ranked correctly {{ '%.0f' % (ml.extinction_auc * 100) }}% of the time on unseen test series), the burning rate (R² {{ '%.2f' % ml.rate_r2 }}), and the fuel left behind (R² {{ '%.2f' % ml.fuel_left_r2 }}).</li>
           <li><b>The advice</b> re-runs the model with one factor changed at a time and reports what improves. It only suggests changes inside the tested range.</li>
-          <li><b>Part 2, the lungs,</b> is physics: NASA's measured smoke sizes fed through the ICRP 66 lung model.</li>
-          <li><b>The two parts use different NASA experiments.</b> Droplet flames (FLEX) and smoke from overheated solids (SAME) were never measured together, so you choose the smoking material in part 2.</li>
-          <li><b>Limits:</b> fuel droplets, not solid materials; no cool-flame temperatures; deposition is not toxicity.</li></ul></details>
-
-      <h3 class="sub">1 · The flame</h3>
+          <li><b>Limits:</b> fuel droplets, not solid materials; no cool-flame temperatures. Smoke is handled separately in the Lung model, because NASA measured droplet flames and smoke in different experiments.</li></ul></details>
       <div class="split">
         <div class="flame-side">
           <div class="flame-space"></div>
@@ -158,7 +171,14 @@
       <figure><figcaption>The same droplet across oxygen levels <b class="tag modeled">Modeled</b></figcaption>
         <div id="flam-plot" class="plot"></div></figure>
 
-      <h3 class="sub">2 · The smoke and the lungs</h3>
+      <p class="source">Training data: NASA PSI-69 (FLEX). Models: scikit-learn logistic regression and random forests, trained when the server starts; {{ ml.validation }}.</p>
+      <a class="next" href="#lung">Next: lung model →</a>
+    </section>
+
+    <!-- ==================== 05 LUNG MODEL ==================== -->
+    <section id="lung" class="page" data-scene="exposure" hidden>
+      <header class="chapter"><span>05</span><h2>What the crew <em>breathes</em></h2>
+        <p>A physics model that turns NASA's smoke measurements into a dose in each part of the lung.</p></header>
       <ol class="steps">
         <li><b>NASA measured the smoke</b>For each overheated material, SAME recorded how many particles there are and how big. Smoke is a mix of sizes, mostly 0.05 to 0.5 µm.</li>
         <li><b>Smoke changes as it drifts</b>Particles collide and stick, so there are fewer, larger ones. We fitted that rate to {{ aging.n_pairs }} fresh/aged SAME pairs. Diluted smoke ages slowly.</li>
@@ -200,14 +220,13 @@
         <p class="note">Read it like this: the grey hill at the bottom is the smoke you selected. Look straight up from it to see which coloured curve is highest at those sizes.
           That region receives most of the deposit. The 3D lung is an illustration; only the brightness of each region comes from the model.</p></figure>
       <p class="source" id="r-source"></p>
-      <p class="source">Flame: NASA PSI-69 (FLEX), scikit-learn logistic regression and random forests, trained when the server starts; {{ ml.validation }}.
-        Aging fit: K = {{ '%.1e' % aging.K_pooled_cm3_s }} cm³/s over {{ aging.n_pairs }} SAME pairs, held-out count error {{ '%.0f' % aging.validation.number_conc_mean_abs_pct_error }}%. {{ aging.note }}</p>
+      <p class="source">Aging fit: K = {{ '%.1e' % aging.K_pooled_cm3_s }} cm³/s over {{ aging.n_pairs }} SAME pairs, held-out count error {{ '%.0f' % aging.validation.number_conc_mean_abs_pct_error }}%. {{ aging.note }}</p>
       <a class="next" href="#assistant">Next: assistant →</a>
     </section>
 
-    <!-- ==================== 05 ASSISTANT ==================== -->
+    <!-- ==================== 06 ASSISTANT ==================== -->
     <section id="assistant" class="page" data-scene="assistant" hidden>
-      <header class="chapter"><span>05</span><h2>Ask <em>the data</em></h2>
+      <header class="chapter"><span>06</span><h2>Ask <em>the data</em></h2>
         <p>A conversation, not single questions: it remembers what you asked earlier. It may only quote numbers returned by its tools: the NASA tables, the lung model and the flame simulator.</p></header>
       <details class="guide"><summary>How to read an answer</summary>
         <ul><li><b class="tag measured">Measured</b> comes straight from a NASA table.</li>

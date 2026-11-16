@@ -124,7 +124,7 @@ function buildScene() {
     materials: { flame: [0.44, 0.4, 0.22, 0.12], lung: [-0.2, 0, 0.8, 0] },
     exposure:  { flame: [0.46, 0.42, 0.16, 0.2], lung: [-0.19, -0.05, 0.8, 1] },
     science:   { flame: [0.4, 0.34, 0.34, 0.45], lung: [-0.2, 0, 0.7, 0] },
-    simulator: { flame: [-0.2, 0.2, 0.62, 1], lung: [-0.19, -0.05, 0.8, 1] },
+    simulator: { flame: [-0.2, 0.2, 0.62, 1], lung: [0.3, 0, 0.7, 0] },
     assistant: { flame: [0.4, -0.3, 0.4, 0.3], lung: [0.3, 0.05, 0.85, 0.16] },
   };
   let pose = POSES.hero, pointer = [0, 0], anchor = {};
@@ -249,7 +249,7 @@ function rankBars(id, order, value, format, unit) {
   const names = [...order].reverse(), x = names.map(n => value(matrix.materials[n].smoke));
   draw(id, [{ type: "bar", orientation: "h", y: names, x, width: 0.5, marker: { color: "#3987e5" }, text: x.map(format), textposition: "outside",
     textfont: { color: INK }, cliponaxis: false, hovertemplate: "%{y}: %{text}<extra></extra>" }],
-    { barcornerradius: 4, margin: { l: 96, r: 70, t: 8, b: 40 }, showlegend: false, xaxis: axis({ title: { text: unit }, rangemode: "tozero" }), yaxis: axis({ ticks: "", tickfont: { color: INK, size: 12 } }) });
+    { barcornerradius: 4, margin: { l: 96, r: 96, t: 8, b: 40 }, showlegend: false, xaxis: axis({ title: { text: unit }, rangemode: "tozero" }), yaxis: axis({ ticks: "", tickfont: { color: INK, size: 12 } }) });
 }
 rankBars("rank-count", matrix.rank_alveolar_fraction, s => 100 * s.alveolar_fraction_by_count, v => v.toFixed(1) + "%", "% of inhaled particles");
 rankBars("rank-mass", matrix.rank_mass_dose, s => s.mass_deposited_ug_per_10min, v => big(v) + " µg", "µg per 10 min");
