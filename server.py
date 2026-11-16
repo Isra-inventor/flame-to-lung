@@ -34,6 +34,11 @@ def matrix():
     return jsonify(clean(engine.hazard_matrix()))
 
 
+@app.get("/api/flame-science")
+def flame_science():
+    return jsonify(clean(engine.flame_science()))
+
+
 # ==================== MODELS ====================
 @app.post("/api/exposure")
 def exposure():
@@ -52,11 +57,13 @@ def flammability():
     a = request.json
     args = [a["fuel"], float(a["o2_pct"]) / 100, float(a["co2_pct"]) / 100, float(a["he_pct"]) / 100, float(a["pressure_mmhg"]), float(a["d0_mm"])]
     out = engine.flammability(*args)
+    out["advice"] = engine.advise(*args)
     out["oxygen_sweep"] = []
     for o2 in range(12, 35):
         e = engine.flammability(args[0], o2 / 100, *args[2:])
         out["oxygen_sweep"].append({"o2_pct": o2, "p_out": e["probability_flame_goes_out_early"],
-                                    "rate": e["burning_rate_mm2_s"], "band": e["burning_rate_band_10_90"]})
+                                    "rate": e["burning_rate_mm2_s"], "band": e["burning_rate_band_10_90"],
+                                    "fuel_left": e["fuel_left_when_hot_flame_goes_out"]})
     return jsonify(clean(out))
 
 
@@ -64,7 +71,9 @@ def flammability():
 @app.post("/api/chat")
 def chat():
     try:
-        return jsonify(clean(assistant.ask(request.json["question"])))
+        history = [{"role": m["role"], "content": str(m["content"])} for m in request.json.get("history", [])
+                   if m.get("role") in ("user", "assistant")][-8:]
+        return jsonify(clean(assistant.ask(request.json["question"], history)))
     except Exception as error:
         return jsonify({"answer": f"The language model could not be reached: {error}", "tool_calls": []}), 502
 

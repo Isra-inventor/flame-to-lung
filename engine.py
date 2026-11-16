@@ -219,12 +219,20 @@ def fit_flammability():
                                       cv=GroupKFold(5), groups=rated["series"])
     regressor.fit(rated[FLEX_FEATURES], rated["burning_rate_mm2_s"])
 
-    return {"classifier": classifier, "regressor": regressor,
+    left = ended[ended["test_end"] == "Extinction"].dropna(subset=["extinction_d_mm"]).copy()
+    left["fuel_left"] = ((left["extinction_d_mm"] / left["d0_mm"]) ** 3).clip(0, 1)
+    leftover = RandomForestRegressor(200, min_samples_leaf=2, random_state=0)
+    held_out_left = cross_val_predict(leftover, left[FLEX_FEATURES], left["fuel_left"], cv=GroupKFold(5), groups=left["series"])
+    leftover.fit(left[FLEX_FEATURES], left["fuel_left"])
+
+    return {"classifier": classifier, "regressor": regressor, "leftover": leftover,
             "ranges": {c: [float(rated[c].min()), float(rated[c].max())] for c in FLEX_FEATURES[1:]},
             "metrics": {"extinction_tests": len(ended), "share_that_went_out": float(went_out.mean()),
                         "extinction_auc": float(roc_auc_score(went_out, held_out)),
                         "rate_tests": len(rated), "rate_r2": float(r2_score(rated["burning_rate_mm2_s"], held_out_rate)),
                         "rate_mae_mm2_s": float(mean_absolute_error(rated["burning_rate_mm2_s"], held_out_rate)),
+                        "fuel_left_tests": len(left), "fuel_left_r2": float(r2_score(left["fuel_left"], held_out_left)),
+                        "fuel_left_mae": float(mean_absolute_error(left["fuel_left"], held_out_left)),
                         "validation": "5-fold, whole test series held out together"}}
 
 
@@ -234,6 +242,7 @@ FLAMMABILITY = fit_flammability()
 def flammability(fuel="Heptane", o2_frac=0.21, co2_frac=0.0, he_frac=0.0, pressure_mmhg=760.0, d0_mm=3.0):
     row = pd.DataFrame([[int(fuel == "Heptane"), o2_frac, co2_frac, he_frac, pressure_mmhg, d0_mm]], columns=FLEX_FEATURES)
     trees = np.array([t.predict(row.values)[0] for t in FLAMMABILITY["regressor"].estimators_])
+    left = np.array([t.predict(row.values)[0] for t in FLAMMABILITY["leftover"].estimators_])
     outside = [c for c, (lo, hi) in FLAMMABILITY["ranges"].items() if not lo <= row[c][0] <= hi]
     if o2_frac + co2_frac + he_frac > 1:
         outside.append("gas fractions add up to more than 1")
@@ -243,10 +252,82 @@ def flammability(fuel="Heptane", o2_frac=0.21, co2_frac=0.0, he_frac=0.0, pressu
             "probability_flame_goes_out_early": float(FLAMMABILITY["classifier"].predict_proba(row)[0, 1]),
             "burning_rate_mm2_s": float(trees.mean()),
             "burning_rate_band_10_90": [float(np.percentile(trees, 10)), float(np.percentile(trees, 90))],
+            "fuel_left_when_hot_flame_goes_out": float(left.mean()),
+            "fuel_left_band_10_90": [float(np.percentile(left, 10)), float(np.percentile(left, 90))],
             "outside_tested_range": outside,
             "metrics": FLAMMABILITY["metrics"], "tested_ranges": FLAMMABILITY["ranges"],
             "source": "PSI-69 (FLEX droplet tests)",
             "limits": "Trained on single fuel droplets only. It interpolates inside the tested conditions and says nothing about solid materials."}
+
+
+# ==================== 8. SAFETY ADVISOR (what would make this flame safer?) ====================
+def verdict(f):
+    p_out, left, fuel = f["probability_flame_goes_out_early"], f["fuel_left_when_hot_flame_goes_out"], f["inputs"]["fuel"]
+    if p_out < 0.5:
+        return {"level": "sustained", "text": "The flame most likely keeps burning until the fuel is gone."}
+    if left >= 0.3:
+        extra = (" Heptane is a fuel NASA saw burn on as an invisible cool flame after the hot flame went out, so treat this as possibly still burning."
+                 if fuel == "Heptane" else " Unburned fuel can re-ignite if oxygen or heat returns.")
+        return {"level": "hidden", "text": f"The visible flame likely goes out, but about {left:.0%} of the fuel is still there." + extra}
+    return {"level": "out", "text": "The flame likely goes out with little fuel left behind."}
+
+
+def advise(fuel, o2_frac, co2_frac, he_frac, pressure_mmhg, d0_mm):
+    base = flammability(fuel, o2_frac, co2_frac, he_frac, pressure_mmhg, d0_mm)
+    room = 1 - o2_frac - co2_frac - he_frac
+    changes = {"Lower oxygen by 3 points": (o2_frac - 0.03, co2_frac, he_frac, pressure_mmhg),
+               "Replace 10 points of nitrogen with CO2": (o2_frac, co2_frac + 0.10, he_frac, pressure_mmhg) if room >= 0.10 else None,
+               "Replace 10 points of nitrogen with helium": (o2_frac, co2_frac, he_frac + 0.10, pressure_mmhg) if room >= 0.10 else None,
+               "Lower pressure by 100 mmHg": (o2_frac, co2_frac, he_frac, pressure_mmhg - 100),
+               "Raise pressure by 100 mmHg": (o2_frac, co2_frac, he_frac, pressure_mmhg + 100)}
+    options = []
+    for name, args in changes.items():
+        if args is None:
+            continue
+        f = flammability(fuel, *args, d0_mm)
+        if f["outside_tested_range"]:
+            continue
+        options.append({"change": name,
+                        "goes_out_early": f["probability_flame_goes_out_early"],
+                        "goes_out_early_change": f["probability_flame_goes_out_early"] - base["probability_flame_goes_out_early"],
+                        "burning_rate_change": f["burning_rate_mm2_s"] - base["burning_rate_mm2_s"],
+                        "fuel_left_change": f["fuel_left_when_hot_flame_goes_out"] - base["fuel_left_when_hot_flame_goes_out"],
+                        "verdict": verdict(f)["level"]})
+    options.sort(key=lambda o: -o["goes_out_early_change"])
+    best = options[0] if options and options[0]["goes_out_early_change"] > 0.02 else None
+    return {"label": "Recommendation built from the Modeled values", "verdict": verdict(base), "options": options,
+            "best_single_change": best["change"] if best else None,
+            "trade_off": "Putting a flame out early leaves fuel behind. More fuel left means more to feed a cool flame or a re-ignition, so keep monitoring after the visible flame is gone."}
+
+
+# ==================== 9. FLAME SCIENCE (measured comparisons) ====================
+def flame_science():
+    flex = pd.read_csv(DATA / "flex.csv")
+    flex = flex[flex["pressure_mmhg"] > 100].copy()
+    flex["diluent"] = np.where(flex["he_frac"] > 0, "Helium", np.where(flex["co2_frac"] > 0, "CO2", "Nitrogen only"))
+    went_out = flex["test_end"] == "Extinction"
+    flex["fuel_left"] = ((flex["extinction_d_mm"] / flex["d0_mm"]) ** 3).where(went_out).clip(0, 1)
+
+    groups = []
+    for (fuel, diluent), g in flex.groupby(["fuel", "diluent"]):
+        groups.append({"fuel": fuel, "diluent": diluent, "tests": len(g), "outcomes": g["test_end"].value_counts().to_dict(),
+                       "median_burning_rate_mm2_s": float(g["burning_rate_mm2_s"].median()),
+                       "median_fuel_left": float(g["fuel_left"].median())})
+    fuels = {fuel: {"tests": len(g), "share_went_out_early": float((g["test_end"] == "Extinction").mean()),
+                    "median_burning_rate_mm2_s": float(g["burning_rate_mm2_s"].median()),
+                    "median_fuel_left": float(g["fuel_left"].median())} for fuel, g in flex.groupby("fuel")}
+    points = flex.dropna(subset=["fuel_left", "d0_mm"])[["fuel", "diluent", "o2_frac", "d0_mm", "fuel_left"]]
+
+    spice = pd.read_csv(DATA / "spice.csv")
+    soot = [{"fuel": fuel if frac == 1 else f"{fuel} diluted to {frac:.0%}", "tests": len(g),
+             "median_smoke_point_mm": float(g["smoke_point_mm"].median()),
+             "range_mm": [float(g["smoke_point_mm"].min()), float(g["smoke_point_mm"].max())]}
+            for (fuel, frac), g in spice.groupby(["fuel", "fuel_mole_frac"])]
+    return {"label": "Measured", "fuels": fuels, "groups": groups, "extinction_points": points.to_dict("records"),
+            "soot": sorted(soot, key=lambda r: r["median_smoke_point_mm"]),
+            "notes": {"fuel_left": "Share of the droplet's volume still unburned when the visible flame went out: (extinction diameter / initial diameter) cubed. Derived by us from PSI-69.",
+                      "smoke_point": "Flame length at which a gas flame starts to release soot. A shorter smoke point means a sootier fuel. PSI-107 (SPICE), ISS tests only.",
+                      "not_in_data": "Xenon diluent, cool-flame temperatures and cool-flame durations are not in these tables."}}
 
 
 if __name__ == "__main__":

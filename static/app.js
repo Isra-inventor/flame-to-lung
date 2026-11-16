@@ -123,7 +123,8 @@ function buildScene() {
     lifecycle: { flame: [0.37, 0.3, 0.5, 0.5], lung: [-0.2, 0, 0.7, 0] },
     materials: { flame: [0.44, 0.4, 0.22, 0.12], lung: [-0.2, 0, 0.8, 0] },
     exposure:  { flame: [0.46, 0.42, 0.16, 0.2], lung: [-0.19, -0.05, 0.8, 1] },
-    flammability: { flame: [-0.2, 0.2, 0.62, 1], lung: [0.3, 0, 0.7, 0] },
+    science:   { flame: [0.4, 0.34, 0.34, 0.45], lung: [-0.2, 0, 0.7, 0] },
+    simulator: { flame: [-0.2, 0.2, 0.62, 1], lung: [-0.19, -0.05, 0.8, 1] },
     assistant: { flame: [0.4, -0.3, 0.4, 0.3], lung: [0.3, 0.05, 0.85, 0.16] },
   };
   let pose = POSES.hero, pointer = [0, 0], anchor = {};
@@ -154,7 +155,7 @@ function buildScene() {
         mesh.scale.setScalar(name === "lung" ? Math.min(box.height / innerHeight * viewH / 4.9, box.width / innerWidth * viewW / 4.2) : box.height / innerHeight * viewH / 3.4 * vigorNow);
       } else {
         mesh.position.set((narrow && name === "lung" ? 0 : cur[0]) * viewW, cur[1] * viewH, 0);
-        mesh.scale.setScalar(cur[2] * (name === "lung" ? Math.min(1, viewH / 6.4) : Math.min(1.1, viewW / 9) * (pose === POSES.flammability ? vigorNow : 1)));
+        mesh.scale.setScalar(cur[2] * (name === "lung" ? Math.min(1, viewH / 6.4) : Math.min(1.1, viewW / 9) * (pose === POSES.simulator ? vigorNow : 1)));
       }
       mesh.material.uniforms.uOpacity.value = cur[3];
       mesh.visible = cur[3] > 0.01;
@@ -254,6 +255,41 @@ rankBars("rank-count", matrix.rank_alveolar_fraction, s => 100 * s.alveolar_frac
 rankBars("rank-mass", matrix.rank_mass_dose, s => s.mass_deposited_ug_per_10min, v => big(v) + " µg", "µg per 10 min");
 } catch (error) { report("materials", error); }
 
+// ==================== 03 FLAME SCIENCE ====================
+const science = await getJson("/api/flame-science").catch(e => (report("flame science", e), null));
+if (science) try {
+  const FUEL_COLOR = { Heptane: "#d95926", Methanol: "#3987e5" };
+  $("#fuel-tiles").innerHTML = Object.entries(science.fuels).map(([fuel, f]) => `
+    <div class="tile"><h4><span class="dot" style="background:${FUEL_COLOR[fuel]}"></span>${fuel}</h4>
+      <dl><div><dt>tests</dt><dd>${f.tests}</dd></div>
+      <div><dt>flame went out early</dt><dd>${Math.round(100 * f.share_went_out_early)}%</dd></div>
+      <div><dt>median burning rate</dt><dd>${f.median_burning_rate_mm2_s.toFixed(2)}<small> mm²/s</small></dd></div>
+      <div><dt>fuel left when it went out</dt><dd>${Math.round(100 * f.median_fuel_left)}%</dd></div></dl></div>`).join("");
+
+  const groups = [...science.groups].reverse(), names = groups.map(g => `${g.fuel} · ${g.diluent}`);
+  const OUTCOME = { Extinction: ["flame went out early", "#3987e5"], Disruption: ["droplet broke up", "#d95926"], Completion: ["burned all the fuel", "#199e70"] };
+  draw("diluent-plot", Object.entries(OUTCOME).map(([key, [name, color]]) => ({
+    type: "bar", orientation: "h", name, y: names, x: groups.map(g => 100 * (g.outcomes[key] || 0) / g.tests), marker: { color, line: { color: "#06080c", width: 2 } },
+    text: groups.map(g => g.outcomes[key] || ""), textposition: "inside", insidetextanchor: "middle", textfont: { color: "#fff" },
+    hovertemplate: `%{y}: %{text} tests ${name} (%{x:.0f}%)<extra></extra>` })),
+    { barmode: "stack", bargap: 0.45, margin: { l: 215, r: 28, t: 34, b: 48 }, xaxis: axis({ title: { text: "% of tests in the group (numbers in bars = tests)" }, range: [0, 100] }), yaxis: axis({ ticks: "", tickfont: { color: INK, size: 12 } }) });
+  $("#diluent-table").innerHTML = `<table class="matrix compare"><tr><th>Group</th><th>Tests</th><th>Median burning rate</th><th>Median fuel left when the flame went out</th></tr>${
+    science.groups.map(g => `<tr><td>${g.fuel} · ${g.diluent}</td><td>${g.tests}</td><td>${g.median_burning_rate_mm2_s.toFixed(2)} mm²/s</td><td>${Math.round(100 * g.median_fuel_left)}%</td></tr>`).join("")}</table>`;
+
+  draw("cool-plot", Object.keys(FUEL_COLOR).map(fuel => {
+    const pts = science.extinction_points.filter(p => p.fuel === fuel);
+    return { x: pts.map(p => p.d0_mm), y: pts.map(p => p.fuel_left), name: fuel, mode: "markers", marker: { color: FUEL_COLOR[fuel], size: 9, line: { color: "#06080c", width: 2 } },
+      text: pts.map(p => `${p.diluent}, ${Math.round(100 * p.o2_frac)}% oxygen`), hovertemplate: `${fuel}, %{x} mm droplet: %{y:.0%} of fuel left<br>%{text}<extra></extra>` };
+  }), { xaxis: axis({ title: { text: "droplet diameter at ignition (mm)" } }), yaxis: axis({ tickformat: ".0%", range: [0, 1.05], title: { text: "fuel still unburned" } }) });
+  $("#cool-note").textContent = `Each dot is one FLEX test where the visible flame went out. Higher means more fuel left to feed a cool flame or a re-ignition. ${science.notes.fuel_left} ${science.notes.not_in_data}`;
+
+  const soot = [...science.soot].reverse();
+  draw("soot-plot", [{ type: "bar", orientation: "h", y: soot.map(r => r.fuel), x: soot.map(r => r.median_smoke_point_mm), width: 0.5, marker: { color: "#3987e5" },
+    text: soot.map(r => `${r.median_smoke_point_mm.toFixed(0)} mm · ${r.tests} tests`), textposition: "outside", textfont: { color: INK }, cliponaxis: false, hovertemplate: "%{y}: median %{x:.1f} mm<extra></extra>" }],
+    { barcornerradius: 4, showlegend: false, margin: { l: 200, r: 120, t: 8, b: 44 }, xaxis: axis({ title: { text: "median smoke point (mm) · shorter = sootier" }, rangemode: "tozero" }), yaxis: axis({ ticks: "", tickfont: { color: INK, size: 12 } }) });
+  $("#soot-note").textContent = `${science.notes.smoke_point} Smoke point also depends on nozzle size and air speed, which differ between tests, so compare medians with care.`;
+} catch (error) { report("flame science", error); }
+
 // ==================== 03 CREW EXPOSURE ====================
 const state = { material: "Kapton", dilution: "0.01", activity: "rest", gravity: "microgravity", fuel: "Heptane" };
 $$(".seg[data-key]").forEach(seg => {
@@ -276,6 +312,11 @@ async function loadExposure() {
   $("#r-aged").textContent = e.inputs.minutes > 0
     ? `After ${e.inputs.minutes} min: particles grew from ${sig(e.measured_source_smoke.gmd_um, 2)} to ${sig(e.aged_smoke.gmd_um, 2)} µm and ${pct(left)} of them are left.`
     : `Fresh smoke: ${sig(e.measured_source_smoke.gmd_um, 2)} µm particles. Move the minutes slider to age it.`;
+  const rest = { light: 25 / 7.5, heavy: 50 / 7.5 }[e.inputs.activity];
+  $("#r-advice").textContent = rest ? `Resting instead would cut this dose ${rest.toFixed(1)} times, because the dose scales with the air breathed.`
+    : e.inputs.dilution > 0.001 ? "Ten times more dilution (ventilation or distance) cuts this dose ten times. Dilution also slows the smoke's aging."
+    : "Already at rest and at the highest dilution offered. A mask or leaving the module are the remaining options.";
+  $("#r-advice").dataset.level = "out";
   const low = e.band_low_gravity_effect;
   $("#r-band").textContent = low
     ? `Reduced-gravity band: alveoli ${pct(e.fraction_by_count.AL)} to ${pct(low.fraction_by_count.AL)} of particles, ${sig(e.mass_deposited_ug_per_10min, 3)} to ${sig(low.mass_deposited_ug_per_10min, 3)} µg. The lower gravity effect is our assumption (half the calibrated one).`
@@ -304,17 +345,27 @@ async function loadFlammability() {
   $("#f-out").textContent = Math.round(100 * f.probability_flame_goes_out_early) + "%";
   $("#f-rate").textContent = f.burning_rate_mm2_s.toFixed(2);
   $("#f-band").innerHTML = `mm²/s · likely ${f.burning_rate_band_10_90.map(v => v.toFixed(2)).join(" to ")} <b class="tag modeled">Modeled</b>`;
+  $("#f-left").textContent = Math.round(100 * f.fuel_left_when_hot_flame_goes_out) + "%";
+  const advice = f.advice, arrow = (v, unit, digits) => Math.abs(v) < 10 ** -digits / 2 ? "no change" : `${v > 0 ? "+" : "−"}${Math.abs(v).toFixed(digits)}${unit}`;
+  $("#f-verdict").textContent = advice.verdict.text;
+  $("#f-verdict").dataset.level = advice.verdict.level;
+  const END = { sustained: "keeps burning", hidden: "goes out, fuel remains", out: "goes out" };
+  $("#advice").innerHTML = `<tr><th>Change one thing</th><th>Goes out early</th><th>Burning rate</th><th>Fuel left behind</th><th>Likely ending</th></tr>` +
+    advice.options.map(o => `<tr${o.change === advice.best_single_change ? ' class="best"' : ""}><td>${o.change}${o.change === advice.best_single_change ? "<small>most effective</small>" : ""}</td>
+      <td>${arrow(100 * o.goes_out_early_change, " pts", 0)}</td><td>${arrow(o.burning_rate_change, " mm²/s", 2)}</td><td>${arrow(100 * o.fuel_left_change, " pts", 0)}</td><td>${END[o.verdict]}</td></tr>`).join("");
+  $("#advice-note").textContent = (advice.best_single_change ? "" : "No single change inside the tested range clearly helps. ") + advice.trade_off;
   $("#f-warn").textContent = f.outside_tested_range.length ? "Outside what FLEX tested (" + f.outside_tested_range.join(", ") + "). Treat this prediction as unreliable." : "Inside the conditions FLEX tested.";
   scene3d.setFlame(0.35 + 1.1 * f.burning_rate_mm2_s * (1 - 0.6 * f.probability_flame_goes_out_early));
   const sweep = f.oxygen_sweep, x = sweep.map(r => r.o2_pct), now = +$("#o2").value;
   draw("flam-plot", [
-    { x, y: sweep.map(r => r.p_out), name: "chance flame goes out early", mode: "lines", line: { color: "#3987e5", width: 2 }, hovertemplate: "%{y:.0%} at %{x}% oxygen<extra>goes out early</extra>" },
+    { x, y: sweep.map(r => r.p_out), name: "chance hot flame goes out early", mode: "lines", line: { color: "#3987e5", width: 2 }, hovertemplate: "%{y:.0%} at %{x}% oxygen<extra>goes out early</extra>" },
+    { x, y: sweep.map(r => r.fuel_left), name: "fuel left behind if it does", mode: "lines", line: { color: "#199e70", width: 2, dash: "dot" }, hovertemplate: "%{y:.0%} at %{x}% oxygen<extra>fuel left</extra>" },
     { x: [...x, ...[...x].reverse()], y: [...sweep.map(r => r.band[1]), ...[...sweep].reverse().map(r => r.band[0])], yaxis: "y2", fill: "toself", fillcolor: "rgba(217,89,38,.18)",
       line: { width: 0 }, hoverinfo: "skip", name: "likely range", showlegend: false },
     { x, y: sweep.map(r => r.rate), yaxis: "y2", name: "burning rate", mode: "lines", line: { color: "#d95926", width: 2 }, hovertemplate: "%{y:.2f} mm²/s at %{x}% oxygen<extra>burning rate</extra>" },
   ], {
     xaxis: axis({ title: { text: "oxygen (%)" }, anchor: "y2", range: [12, 34] }),
-    yaxis: axis({ domain: [0.58, 1], tickformat: ".0%", range: [0, 1.02], title: { text: "goes out early" } }),
+    yaxis: axis({ domain: [0.58, 1], tickformat: ".0%", range: [0, 1.02], title: { text: "share" } }),
     yaxis2: axis({ domain: [0, 0.42], rangemode: "tozero", title: { text: "burn rate (mm²/s)" } }),
     shapes: [{ type: "line", x0: now, x1: now, yref: "paper", y0: 0, y1: 1, line: { color: INK, width: 1, dash: "dot" } }],
   });
@@ -326,19 +377,22 @@ $$("#presets button").forEach(b => b.onclick = () => { $("#o2").value = b.datase
 const escapeHtml = t => t.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 const pretty = t => escapeHtml(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
   .replace(/\[(Measured|Modeled|Recommendation)([^\]]*)\]/g, (_, kind, rest) => `<b class="tag ${kind.toLowerCase()}">${kind}</b>${rest ? `<small>${rest.replace(/^[,:\s—-]+/, " ")}</small>` : ""}`);
+let history = [];
 async function ask(question) {
   if (!question.trim()) return;
   const chat = $("#chat");
   chat.insertAdjacentHTML("beforeend", `<div class="msg q">${escapeHtml(question)}</div><div class="msg a wait">calling tools on NASA data…</div>`);
   const slot = chat.lastElementChild;
   slot.scrollIntoView({ block: "center", behavior: "smooth" });
-  const out = await post("/api/chat", { question }).catch(e => ({ answer: "Request failed: " + e, tool_calls: [] }));
+  const out = await post("/api/chat", { question, history }).catch(e => ({ answer: "Request failed: " + e, tool_calls: [], failed: true }));
+  if (!out.failed) history.push({ role: "user", content: question }, { role: "assistant", content: out.answer || "" });
   slot.classList.remove("wait");
   slot.innerHTML = pretty(out.answer || "No answer.") + (out.tool_calls.length ? `<details><summary>${out.tool_calls.length} tool call${out.tool_calls.length > 1 ? "s" : ""}: ${out.tool_calls.map(c => c.tool).join(", ")}</summary>${
     out.tool_calls.map(c => `<pre>${escapeHtml(c.tool + "(" + JSON.stringify(c.args) + ")\n\n" + JSON.stringify(c.result, null, 1).slice(0, 2500))}</pre>`).join("")}</details>` : "");
 }
 $("#ask").onsubmit = e => { e.preventDefault(); ask($("#question").value); $("#question").value = ""; };
 $$(".chips button").forEach(b => b.onclick = () => ask(b.textContent));
+$("#new-chat").onclick = () => { history = []; $("#chat").innerHTML = ""; };
 
 loadExposure().catch(e => report("exposure", e));
 loadFlammability().catch(e => report("flammability", e));

@@ -12,7 +12,7 @@ extinction → crew exposure), ranks materials by fire evidence and by inhalatio
 two rankings have no data in common, and adds an assistant whose numbers may only come from NASA data
 or a cited physics model.
 
-![Crew exposure](docs/screen-exposure.png)
+![Simulator](docs/screen-simulator.png)
 
 ## Run it
 
@@ -32,8 +32,8 @@ Everything except the Assistant chapter works without a key.
 | File | What it does |
 |---|---|
 | `build_data.py` | Downloads NASA PSI files and cleans them into `data/processed/*.csv` |
-| `engine.py` | Lung model (deposition, gravity, smoke aging, exposure), hazard matrix, flammability model |
-| `assistant.py` | Five tools + the tool-calling loop for the language model |
+| `engine.py` | Lung model, hazard matrix, flame simulator, safety advisor, measured flame-science summaries |
+| `assistant.py` | Six tools + the tool-calling loop (with conversation memory) for the language model |
 | `server.py` | Flask page and JSON API |
 | `templates/`, `static/` | The dashboard (Three.js scene, Plotly charts) |
 | `data/cards.json` | One summary card per investigation |
@@ -50,6 +50,7 @@ All from NASA Physical Sciences Informatics (psi.nasa.gov). File hashes are in `
 | BASS | PSI-26 | 121 | did it burn, by material |
 | BASS-II | PSI-25 | 129 (test log) | oxygen and flow conditions |
 | Saffire I–III | PSI-98, 99, 100 | 13 samples | large-scale flame spread |
+| SPICE | PSI-107 | 55 smoke points (ISS tests only) | soot tendency by fuel and dilution |
 
 ## Models
 
@@ -60,10 +61,12 @@ All from NASA Physical Sciences Informatics (psi.nasa.gov). File hashes are in `
   Reduced-gravity results are shown as a band; the low end (half the calibrated effect) is our assumption.
 - **Smoke aging:** coagulation, `N(t) = N0 / (1 + K·N0·t)`, with K fitted to 43 fresh/aged SAME pairs
   (K ≈ 8.8e-10 cm³/s, leave-one-out count error 17%).
-- **Flammability (machine learning):** trained on FLEX droplet tests with scikit-learn. A logistic regression predicts
-  the chance the flame goes out before the fuel is used up (AUC 0.82) and a random forest predicts burning rate
-  (R² 0.67, mean error 0.05 mm²/s). Scores are from 5-fold validation with whole test series held out.
-  It applies to fuel droplets inside the tested conditions only, not to solid materials.
+- **Flame simulator (machine learning):** trained on FLEX droplet tests with scikit-learn. A logistic regression predicts
+  the chance the hot flame goes out before the fuel is used up (AUC 0.82); random forests predict burning rate
+  (R² 0.67) and the share of fuel left when the flame goes out (R² 0.64), our indicator of cool-flame and re-ignition
+  risk. Scores are from 5-fold validation with whole test series held out. Fuel droplets only, inside tested conditions.
+- **Safety advisor:** re-runs the simulator with one factor changed at a time (oxygen, CO2, helium, pressure) and
+  reports which change helps most, and what it costs in fuel left behind.
 - **Assistant:** an open-weight model with tool calling, reached through OpenRouter. It was not fine-tuned.
 
 ## Limitations
@@ -80,6 +83,9 @@ All from NASA Physical Sciences Informatics (psi.nasa.gov). File hashes are in `
 | BASS outcomes come from keywords in crew notes | Counts are approximate and flagged in the table |
 | BASS-II spread rates are not in the NASA table | No solid-material flame-spread model is included |
 | Flammability model is trained on about 250 droplet tests | It interpolates; it flags inputs outside the tested range |
+| Cool-flame temperatures and durations are not in the FLEX table | Cool-flame risk is shown as fuel left behind, not as a cool-flame prediction |
+| Droplet flames (FLEX) and smoke (SAME) were measured in separate experiments | The simulator's flame and lung parts are not physically coupled |
+| Xenon diluent is not in the FLEX table | Only nitrogen, CO2 and helium are compared |
 | No partial-gravity combustion data exists in PSI | Lunar results are for lung deposition only |
 | Fire and smoke were tested on different materials | Only cotton and silicone have both; the gaps are a finding |
 

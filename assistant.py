@@ -8,7 +8,7 @@ import engine
 
 ROOT = Path(__file__).parent
 CARDS = json.loads((ROOT / "data" / "cards.json").read_text())
-TABLES = ["same", "flex", "bass", "bass2", "saffire"]
+TABLES = ["same", "flex", "bass", "bass2", "saffire", "spice"]
 
 SYSTEM_PROMPT = """You are a spacecraft fire-safety briefing assistant built on NASA microgravity combustion data.
 
@@ -19,6 +19,8 @@ Rules:
    (aged smoke, deposition fractions, doses) and everything from flammability_estimate is [Modeled].
    flammability_estimate is about fuel droplets only; never apply it to solid materials.
 3. State the dilution scenario you assumed. Cite the PSI IDs or papers given in the tool results.
+   Cool flames: the tables hold no cool-flame temperatures or durations. What we have is the fuel left when the
+   hot flame goes out, as an indicator of cool-flame and re-ignition risk. Say so when asked.
 4. If the tools do not have it, say "not in the data". Do not guess.
 5. Mention limits when relevant: deposition is not toxicity; toxic gases are not modelled.
 6. Answer in at most 150 words, plain crew-briefing style."""
@@ -72,8 +74,15 @@ def material_evidence():
 
 # ==================== TOOL 5: FLAMMABILITY PREDICTION ====================
 def flammability_estimate(fuel="Heptane", o2_pct=21, co2_pct=0, he_pct=0, pressure_mmhg=760, droplet_mm=3):
-    return _round(engine.flammability(fuel, float(o2_pct) / 100, float(co2_pct) / 100, float(he_pct) / 100,
-                                      float(pressure_mmhg), float(droplet_mm)))
+    args = (fuel, float(o2_pct) / 100, float(co2_pct) / 100, float(he_pct) / 100, float(pressure_mmhg), float(droplet_mm))
+    return _round(engine.flammability(*args) | {"safety_advice": engine.advise(*args)})
+
+
+# ==================== TOOL 6: MEASURED FLAME SCIENCE ====================
+def flame_science():
+    out = engine.flame_science()
+    out.pop("extinction_points")
+    return _round(out)
 
 
 def _round(x):
@@ -94,7 +103,7 @@ def _schema(name, description, properties, required=()):
 
 TOOLS = {"search_investigations": search_investigations, "query_table": query_table,
          "smoke_exposure": smoke_exposure, "material_evidence": material_evidence,
-         "flammability_estimate": flammability_estimate}
+         "flammability_estimate": flammability_estimate, "flame_science": flame_science}
 
 SCHEMAS = [
     _schema("search_investigations", "Find NASA investigation summaries (SAME, FLEX, cool flames, BASS, BASS-II, Saffire, SPICE, lung model).",
@@ -109,7 +118,8 @@ SCHEMAS = [
              "minutes": {"type": "number", "description": "minutes the smoke has aged in the cabin"},
              "activity": {"type": "string", "enum": list(engine.BREATHING_L_MIN)},
              "gravity": {"type": "string", "enum": list(engine.GRAVITY)}}, ["material"]),
-    _schema("flammability_estimate", "Machine-learning prediction, trained on FLEX droplet tests: chance the flame goes out before the fuel is used up, and the burning rate.",
+    _schema("flame_science", "Measured comparisons: methanol vs heptane, diluents (nitrogen, CO2, helium), fuel left when the hot flame goes out (cool-flame risk), and soot (SPICE smoke points by fuel).", {}),
+    _schema("flammability_estimate", "Flame simulator trained on FLEX droplet tests: chance the hot flame goes out early, burning rate, fuel left behind (cool-flame risk), and which single change would make it safer.",
             {"fuel": {"type": "string", "enum": ["Heptane", "Methanol"]}, "o2_pct": {"type": "number", "description": "oxygen, percent by mole (tested 12 to 34)"},
              "co2_pct": {"type": "number"}, "he_pct": {"type": "number"},
              "pressure_mmhg": {"type": "number", "description": "760 = 1 atm; 10.2 psi = 527"}, "droplet_mm": {"type": "number"}}),

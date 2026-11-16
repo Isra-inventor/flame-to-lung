@@ -14,6 +14,7 @@ FILES = [
     ("PSI-98", "PSI-98_Experimental table_SAFFIRE-1.csv"),
     ("PSI-99", "PSI-99_Experimental table_SAFFIRE-2.csv"),
     ("PSI-100", "PSI-100_Experimental table_SAFFIRE-3.csv"),
+    ("PSI-107", "PSI-107_Raw Data_SmokePointReview-0g-3.xlsx"),
 ]
 
 
@@ -183,13 +184,31 @@ def build_saffire():
     return df
 
 
+# ==================== SPICE (soot: smoke point of gas flames) ====================
+def build_spice():
+    src = FILES[7][1]
+    raw = pd.read_excel(RAW / src, sheet_name="Smoke Point Datasheet", header=None).iloc[4:]
+    df = raw[[5, 6, 11, 7, 18, 29, 30]].copy()
+    df.columns = ["test", "fuel_as_written", "fuel_mole_frac", "nozzle_mm", "smoke_point_mm", "air_velocity_cm_s", "fuel_velocity_cm_s"]
+    df = df[df["fuel_as_written"].astype(str).str.contains("Ethylene|Propane|Propylene") & ~df["fuel_as_written"].astype(str).str.contains("Avg")]
+    df = df.reset_index(drop=True)
+    flags = pd.Series("", index=df.index)
+    to_number(df, df.columns[2:], flags)
+    keep = (df["smoke_point_mm"] > 0) & df["test"].notna() & df["fuel_mole_frac"].notna()
+    df, flags = df[keep].reset_index(drop=True), flags[keep].reset_index(drop=True)
+    df["fuel"] = df["fuel_as_written"].str.extract("(Ethylene|Propane|Propylene)")[0]
+    df["value_type"] = "derived-by-NASA"
+    return finish(df, flags, "PSI-107", src, "spice")
+
+
 # ==================== RUN ====================
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     download()
-    same, flex, bass2, bass, saffire = build_same(), build_flex(), build_bass2(), build_bass(), build_saffire()
+    same, flex, bass2, bass, saffire, spice = build_same(), build_flex(), build_bass2(), build_bass(), build_saffire(), build_spice()
     print(f"SAME    {len(same)} rows, {same['usable_for_size'].sum()} usable for size")
     print(f"FLEX    {len(flex)} rows  {flex['fuel'].value_counts().to_dict()}  {flex['test_end'].value_counts().to_dict()}")
     print(f"BASS-II {len(bass2)} rows")
     print(f"BASS    {len(bass)} rows  {bass['outcome'].value_counts().to_dict()}")
     print(f"SAFFIRE {len(saffire)} samples")
+    print(f"SPICE   {len(spice)} smoke points  {spice['fuel'].value_counts().to_dict()}")

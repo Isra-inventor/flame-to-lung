@@ -81,7 +81,10 @@
     "what": "During FLEX, some heptane droplets kept shrinking after the visible flame had gone out. The droplet was still burning with an invisible low-temperature 'cool flame'.",
     "findings": [
       "A fire that looks extinguished can keep reacting without a visible flame.",
-      "In the table, 'Visible flame extinction diameter' records the droplet size when the visible flame went out; fuel remained at that moment in extinction tests."
+      "In the table, 'Visible flame extinction diameter' records the droplet size when the visible flame went out; fuel remained at that moment in extinction tests.",
+      "Our reading of the table: when the visible flame went out, heptane droplets still held a median of about 60% of their fuel volume; methanol droplets about 18%.",
+      "For heptane, the lower the oxygen, the more fuel was left: about 96% at 15% oxygen or below, about 49% above 21%.",
+      "Cool-flame temperatures and durations are not in this table, so leftover fuel is our indicator of cool-flame and re-ignition risk."
     ],
     "safety_meaning": "'No visible flame' does not prove a fire is out. Crews should keep monitoring for heat and combustion products after a fire appears extinguished.",
     "sources": [
@@ -189,10 +192,12 @@
     "title": "SPICE: Smoke Point In Co-flow Experiment",
     "psi_id": "PSI-107",
     "stage": "soot",
-    "table": null,
-    "what": "Gas-jet flames were burned on the ISS to find the smoke point: the flame length at which a flame starts releasing soot.",
+    "table": "spice",
+    "what": "Gas-jet flames of ethylene, propane and propylene were burned in a co-flowing air duct on the ISS to find the smoke point: the flame length at which a flame starts releasing soot.",
     "findings": [
-      "The smoke point datasheet is available from NASA PSI but is not processed into our tables, so we report no numbers from it."
+      "55 ISS smoke points in our table: 43 propylene, 6 ethylene, 6 propane.",
+      "Propylene was the sootiest fuel (median smoke point about 22 mm); propane the least sooty (about 68 mm); ethylene in between (about 57 mm).",
+      "Diluting propylene to 50% with inert gas raised its median smoke point to about 33 mm: dilution suppresses soot."
     ],
     "safety_meaning": "Smoke point tells how readily a fuel makes soot, which affects both smoke detection and what the crew breathes.",
     "sources": [
@@ -201,10 +206,10 @@
     "compare": {
       "name": "SPICE",
       "objective": "Find the flame length at which a flame starts to release soot",
-      "fuel": "Gas-jet flames",
-      "conditions": "Co-flowing air in a duct",
-      "variables": "Not processed in our tables",
-      "measurements": "Smoke point",
+      "fuel": "Gas jets of ethylene, propane, propylene (pure or diluted to 75% and 50%); nozzles 0.4 to 1.6 mm",
+      "conditions": "Co-flowing air at about 5 to 65 cm/s, 1 atm",
+      "variables": "Fuel, dilution, nozzle size, air and fuel velocity",
+      "measurements": "Smoke point (flame length at the onset of soot release), flame width",
       "hardware": "SPICE flow duct in the Microgravity Science Glovebox (MSG), ISS"
     }
   },

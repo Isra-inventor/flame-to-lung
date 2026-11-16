@@ -21,3 +21,10 @@ def test_flammability_route():
     out = client.post("/api/flammability", json=body).json
     assert 0 <= out["probability_flame_goes_out_early"] <= 1
     assert len(out["oxygen_sweep"]) == 23
+    assert out["advice"]["verdict"]["level"] in ("sustained", "hidden", "out")
+
+
+def test_flame_science_route():
+    out = client.get("/api/flame-science").json
+    assert set(out["fuels"]) == {"Heptane", "Methanol"}
+    assert out["soot"][0]["fuel"].startswith("Propylene")

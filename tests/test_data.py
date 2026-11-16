@@ -13,6 +13,7 @@ def test_row_counts():
     assert len(load("flex")) == 274
     assert len(load("bass")) == 121
     assert len(load("saffire")) == 13
+    assert len(load("spice")) == 55
 
 
 def test_flex_breakdown():
@@ -31,7 +32,7 @@ def test_same_sizes_are_physical():
 
 
 def test_every_table_keeps_its_source():
-    for name in ["same", "flex", "bass", "bass2", "saffire"]:
+    for name in ["same", "flex", "bass", "bass2", "saffire", "spice"]:
         df = load(name)
         for col in ["psi_id", "source_file", "value_type", "quality_flags"]:
             assert col in df.columns

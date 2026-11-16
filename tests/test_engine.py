@@ -80,3 +80,15 @@ def test_flammability_model_beats_guessing_and_flags_extrapolation():
     assert engine.FLAMMABILITY["metrics"]["extinction_auc"] > 0.7
     assert engine.FLAMMABILITY["metrics"]["rate_r2"] > 0.5
     assert engine.flammability(o2_frac=0.6)["outside_tested_range"]
+
+
+# ==================== ADVISOR + FLAME SCIENCE ====================
+def test_heptane_leaves_more_fuel_than_methanol():
+    fuels = engine.flame_science()["fuels"]
+    assert fuels["Heptane"]["median_fuel_left"] > fuels["Methanol"]["median_fuel_left"]
+
+
+def test_advisor_only_suggests_tested_conditions():
+    advice = engine.advise("Heptane", 0.13, 0, 0, 530, 3)
+    assert all("Lower oxygen" not in o["change"] and "Lower pressure" not in o["change"] for o in advice["options"])
+    assert 0 <= engine.flammability()["fuel_left_when_hot_flame_goes_out"] <= 1
