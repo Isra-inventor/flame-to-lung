@@ -312,8 +312,11 @@ $$(".seg[data-key]").forEach(seg => {
 });
 $("#minutes").oninput = () => { $("#minutes-out").textContent = $("#minutes").value; loadExposure(); };
 
+let exposureTicket = 0, flameTicket = 0;
 async function loadExposure() {
+  const ticket = ++exposureTicket;
   const e = await post("/api/exposure", { material: state.material, dilution: state.dilution, minutes: $("#minutes").value, activity: state.activity, gravity: state.gravity });
+  if (ticket !== exposureTicket) return;
   scene3d.setDeposition(e.fraction_by_count);
   scene3d.setSmokeSize(e.aged_smoke.gmd_um / e.measured_source_smoke.gmd_um);
   $("#regions").innerHTML = Object.entries(REGION).map(([k, [name, color]]) => `
@@ -354,7 +357,9 @@ async function loadExposure() {
 const SLIDERS = { o2: v => v + "%", co2: v => v + "%", he: v => v + "%", pressure: v => `${v} mmHg · ${(v / 760).toFixed(2)} atm`, d0: v => v + " mm" };
 async function loadFlammability() {
   Object.entries(SLIDERS).forEach(([id, show]) => $(`output[data-for=${id}]`).textContent = show($("#" + id).value));
+  const ticket = ++flameTicket;
   const f = await post("/api/flammability", { fuel: state.fuel, o2_pct: $("#o2").value, co2_pct: $("#co2").value, he_pct: $("#he").value, pressure_mmhg: $("#pressure").value, d0_mm: $("#d0").value });
+  if (ticket !== flameTicket) return;
   $("#f-out").textContent = Math.round(100 * f.probability_flame_goes_out_early) + "%";
   $("#f-rate").textContent = f.burning_rate_mm2_s.toFixed(2);
   $("#f-band").innerHTML = `mm²/s · likely ${f.burning_rate_band_10_90.map(v => v.toFixed(2)).join(" to ")} <b class="tag modeled">Modeled</b>`;
