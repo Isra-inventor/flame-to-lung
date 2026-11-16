@@ -34,6 +34,11 @@ def matrix():
     return jsonify(clean(engine.hazard_matrix()))
 
 
+@app.get("/api/findings")
+def findings():
+    return jsonify(clean(engine.ranked_findings()))
+
+
 @app.get("/api/flame-science")
 def flame_science():
     return jsonify(clean(engine.flame_science()))

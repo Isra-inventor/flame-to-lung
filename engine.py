@@ -330,6 +330,65 @@ def flame_science():
                       "not_in_data": "Xenon diluent, cool-flame temperatures and cool-flame durations are not in these tables."}}
 
 
+# ==================== 10. FINDINGS RANKED FOR FIRE SAFETY ====================
+# evidence is computed from the number of tests; surprise and actionable (0-3) are our own judgement.
+def ranked_findings():
+    science, matrix = flame_science(), hazard_matrix()
+    flex = pd.read_csv(DATA / "flex.csv")
+    heptane_out = len(flex[(flex["fuel"] == "Heptane") & (flex["test_end"] == "Extinction")])
+    bass = pd.read_csv(DATA / "bass.csv")["outcome"].value_counts()
+    saffire = pd.read_csv(DATA / "saffire.csv")
+    silicone = int(saffire["material"].str.contains("Silicone").sum())
+    kapton = matrix["materials"]["Kapton"]["smoke"]
+    cabin, moon = flammability("Heptane", 0.21, 0, 0, 760, 3), flammability("Heptane", 0.30, 0, 0, 527, 3)
+    low_o2 = next(o for o in advise("Heptane", 0.21, 0, 0, 760, 3)["options"] if o["change"].startswith("Lower oxygen"))
+    both = [m for m, r in matrix["materials"].items() if "fire" in r and "smoke" in r]
+    soot = {r["fuel"]: r["median_smoke_point_mm"] for r in science["soot"]}
+    n_spice = sum(r["tests"] for r in science["soot"])
+    m = FLAMMABILITY["metrics"]
+
+    findings = [
+        ("A fire can look out while most of its fuel is still there",
+         f"When the visible flame went out, heptane droplets still held a median {science['fuels']['Heptane']['median_fuel_left']:.0%} of their fuel; FLEX found such droplets burning on as invisible cool flames.",
+         "Measured", "PSI-69 FLEX", heptane_out, 3, 3, "science", "Keep monitoring heat and combustion gases after a fire appears extinguished."),
+        ("A higher-oxygen cabin keeps flames alive",
+         f"For the same heptane droplet, the chance the flame goes out early falls from {cabin['probability_flame_goes_out_early']:.0%} in ISS cabin air to {moon['probability_flame_goes_out_early']:.0%} at 30% oxygen and 10.2 psi.",
+         "Modeled", "PSI-69 FLEX, flame simulator", m["extinction_tests"], 2, 3, "simulator", "Moon-base atmospheres need flammability limits re-tested at their own oxygen level."),
+        ("The smallest smoke particles reach deepest into the lung",
+         f"Kapton smoke averages {kapton['gmd_um']:.2g} µm, and {kapton['alveolar_fraction_by_count']:.0%} of inhaled particles reach the alveoli, the highest of the five smokes.",
+         "Modeled", "PSI-101 SAME, lung model", kapton["n_runs"], 2, 3, "lung", "Detectors and masks must work for particles under 0.1 µm, typical of overheated wire insulation."),
+        ("Starving a flame of oxygen leaves more fuel behind",
+         f"Lowering oxygen by 3 points raises the chance the flame goes out by {low_o2['goes_out_early_change'] * 100:.0f} points, but leaves {low_o2['fuel_left_change'] * 100:.0f} points more fuel unburned.",
+         "Modeled", "PSI-69 FLEX, flame simulator", m["fuel_left_tests"], 3, 2, "simulator", "Choose suppression by what it leaves behind, not only by whether the flame disappears."),
+        ("Flames survive in very slow air flows",
+         f"{bass.get('burned', 0)} of {bass.sum()} BASS tests burned, many at flows where the flame turns dim and blue.",
+         "Measured", "PSI-26 BASS (keyword reading of crew notes)", int(bass.sum()), 2, 2, "investigations", "Stopping the fans does not reliably stop a fire."),
+        ("A material's ranking on Earth does not carry over to orbit",
+         f"All {silicone} silicone samples on Saffire-II had a burn length of about zero in microgravity, although three burned in normal gravity.",
+         "Measured", "PSI-99 Saffire-II", silicone, 3, 2, "materials", "Qualify materials in the gravity they will be used in."),
+        ("Fire and smoke were tested on different materials",
+         f"Of {len(matrix['materials'])} materials, only {len(both)} ({' and '.join(both).lower()}) have both flammability and smoke data.",
+         "Measured", "PSI-26, 98-101", len(matrix["materials"]), 2, 3, "materials", "Each gap is an experiment worth flying, starting with Kapton flammability."),
+        ("Drifting smoke changes, and dilution decides how fast",
+         f"Particles stick together at an effective rate of {AGING['K_pooled_cm3_s']:.1e} cm³/s. Dense smoke grows within minutes; smoke diluted 100 times barely changes.",
+         "Modeled", "PSI-101 SAME-R, aging fit", AGING["n_pairs"], 2, 2, "lung", "A detector far from the source sees different smoke than one beside it."),
+        ("Some fuels soot far more readily, and dilution suppresses it",
+         f"Propylene's median smoke point is {soot['Propylene']:.0f} mm against {soot['Propane']:.0f} mm for propane; diluting propylene to 50% raises it to {soot['Propylene diluted to 50%']:.0f} mm.",
+         "Measured", "PSI-107 SPICE", n_spice, 1, 2, "science", "Fuel chemistry sets how much soot a crew will face."),
+    ]
+    rows = []
+    for title, detail, label, source, n, surprise, actionable, page, meaning in findings:
+        evidence = 3 if n >= 100 else 2 if n >= 30 else 1
+        rows.append({"title": title, "detail": detail, "label": label, "source": source, "tests": n, "page": page, "safety_meaning": meaning,
+                     "scores": {"evidence": evidence, "surprise": surprise, "actionable": actionable}, "total": evidence + surprise + actionable})
+    rows.sort(key=lambda r: (-r["total"], -r["tests"]))
+    return {"findings": [r | {"rank": i} for i, r in enumerate(rows, 1)],
+            "method": {"evidence": "How many tests stand behind it: 3 = 100 or more, 2 = 30 to 99, 1 = fewer. Computed from the tables.",
+                       "surprise": "How badly Earth intuition gets it wrong (0 to 3). Our judgement.",
+                       "actionable": "How directly a crew or designer can act on it (0 to 3). Our judgement.",
+                       "note": "The order is a recommendation, not a measurement. Ties go to the finding with more tests."}}
+
+
 if __name__ == "__main__":
     import json
     print(json.dumps(AGING, indent=1))

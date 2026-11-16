@@ -28,3 +28,10 @@ def test_flame_science_route():
     out = client.get("/api/flame-science").json
     assert set(out["fuels"]) == {"Heptane", "Methanol"}
     assert out["soot"][0]["fuel"].startswith("Propylene")
+
+
+def test_findings_are_ranked():
+    out = client.get("/api/findings").json["findings"]
+    assert [f["rank"] for f in out] == list(range(1, len(out) + 1))
+    assert all(out[i]["total"] >= out[i + 1]["total"] for i in range(len(out) - 1))
+    assert all(f["scores"]["evidence"] == (3 if f["tests"] >= 100 else 2 if f["tests"] >= 30 else 1) for f in out)

@@ -85,6 +85,11 @@ def flame_science():
     return _round(out)
 
 
+# ==================== TOOL 7: FINDINGS RANKED FOR FIRE SAFETY ====================
+def ranked_findings():
+    return _round(engine.ranked_findings())
+
+
 def _round(x):
     if isinstance(x, float):
         return float(f"{x:.3g}")
@@ -103,7 +108,8 @@ def _schema(name, description, properties, required=()):
 
 TOOLS = {"search_investigations": search_investigations, "query_table": query_table,
          "smoke_exposure": smoke_exposure, "material_evidence": material_evidence,
-         "flammability_estimate": flammability_estimate, "flame_science": flame_science}
+         "flammability_estimate": flammability_estimate, "flame_science": flame_science,
+         "ranked_findings": ranked_findings}
 
 SCHEMAS = [
     _schema("search_investigations", "Find NASA investigation summaries (SAME, FLEX, cool flames, BASS, BASS-II, Saffire, SPICE, lung model).",
@@ -118,6 +124,7 @@ SCHEMAS = [
              "minutes": {"type": "number", "description": "minutes the smoke has aged in the cabin"},
              "activity": {"type": "string", "enum": list(engine.BREATHING_L_MIN)},
              "gravity": {"type": "string", "enum": list(engine.GRAVITY)}}, ["material"]),
+    _schema("ranked_findings", "The main findings ranked by fire-safety importance, with the scoring method. Use for 'what matters most' or 'rank the findings' questions.", {}),
     _schema("flame_science", "Measured comparisons: methanol vs heptane, diluents (nitrogen, CO2, helium), fuel left when the hot flame goes out (cool-flame risk), and soot (SPICE smoke points by fuel).", {}),
     _schema("flammability_estimate", "Flame simulator trained on FLEX droplet tests: chance the hot flame goes out early, burning rate, fuel left behind (cool-flame risk), and which single change would make it safer.",
             {"fuel": {"type": "string", "enum": ["Heptane", "Methanol"]}, "o2_pct": {"type": "number", "description": "oxygen, percent by mole (tested 12 to 34)"},

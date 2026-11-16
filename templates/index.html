@@ -47,7 +47,7 @@
         <p class="map-title">The route through the site</p>
         <div class="zones" aria-hidden="true"><span style="grid-column: span 3">See the evidence</span><span style="grid-column: span 2">Run the models</span><span>Ask</span></div>
         <ol>
-          <li><a href="#investigations"><i>01</i><b>Investigations</b><span>What NASA burned in each experiment, and what it taught.</span><em><b class="tag measured">Measured</b></em></a></li>
+          <li><a href="#investigations"><i>01</i><b>Investigations</b><span>The findings ranked for fire safety, and every experiment behind them.</span><em><b class="tag measured">Measured</b><b class="tag recommendation">Recommendation</b></em></a></li>
           <li><a href="#materials"><i>02</i><b>Materials</b><span>Which materials burn, which make dangerous smoke, and where data is missing.</span><em><b class="tag measured">Measured</b><b class="tag modeled">Modeled</b></em></a></li>
           <li><a href="#science"><i>03</i><b>Flame science</b><span>Fuels, diluent gases, cool flames and soot.</span><em><b class="tag measured">Measured</b></em></a></li>
           <li><a href="#simulator"><i>04</i><b>Flame simulator</b><span>Set the atmosphere. See if the flame survives and what would make it safer.</span><em><b class="tag modeled">Modeled</b><b class="tag recommendation">Recommendation</b></em></a></li>
@@ -61,7 +61,15 @@
     <!-- ==================== 01 INVESTIGATIONS ==================== -->
     <section id="investigations" class="page" data-scene="lifecycle" hidden>
       <header class="chapter"><span>01</span><h2>A fire has <em>a life</em></h2>
-        <p>Each NASA investigation studied one moment of it. Pick a stage to see what was tested and what it means for safety.</p></header>
+        <p>First, what matters most: the findings ranked for fire safety. Then every NASA investigation behind them.</p></header>
+
+      <h3 class="sub first">The findings, ranked <b class="tag recommendation">Recommendation</b></h3>
+      <details class="guide"><summary>How the ranking works</summary>
+        <ul id="rank-method"></ul></details>
+      <ol id="findings" class="findings"></ol>
+
+      <h3 class="sub">The investigations, stage by stage</h3>
+      <p class="note">Each NASA investigation studied one moment of a fire's life. Pick a stage to see what was tested and what it means for safety.</p>
       <div class="stages" role="tablist">
         {% for s in stages %}<button role="tab" data-stage="{{ s }}"><i>{{ loop.index }}</i>{{ s }}</button>{% endfor %}
       </div>

@@ -33,7 +33,7 @@ Everything except the Assistant chapter works without a key.
 |---|---|
 | `build_data.py` | Downloads NASA PSI files and cleans them into `data/processed/*.csv` |
 | `engine.py` | Lung model, hazard matrix, flame simulator, safety advisor, measured flame-science summaries |
-| `assistant.py` | Six tools + the tool-calling loop (with conversation memory) for the language model |
+| `assistant.py` | Seven tools + the tool-calling loop (with conversation memory) for the language model |
 | `server.py` | Flask page and JSON API |
 | `templates/`, `static/` | The dashboard (Three.js scene, Plotly charts) |
 | `data/cards.json` | One summary card per investigation |
@@ -65,6 +65,8 @@ All from NASA Physical Sciences Informatics (psi.nasa.gov). File hashes are in `
   the chance the hot flame goes out before the fuel is used up (AUC 0.82); random forests predict burning rate
   (R² 0.67) and the share of fuel left when the flame goes out (R² 0.64), our indicator of cool-flame and re-ignition
   risk. Scores are from 5-fold validation with whole test series held out. Fuel droplets only, inside tested conditions.
+- **Ranked findings:** nine findings scored on evidence (number of tests, computed), surprise and actionability
+  (our judgement, 0 to 3 each) and sorted. The ranking is a recommendation, not a measurement.
 - **Safety advisor:** re-runs the simulator with one factor changed at a time (oxygen, CO2, helium, pressure) and
   reports which change helps most, and what it costs in fuel left behind.
 - **Assistant:** an open-weight model with tool calling, reached through OpenRouter. It was not fine-tuned.

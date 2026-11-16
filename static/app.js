@@ -227,6 +227,19 @@ $("#compare").innerHTML = `<tr><th>Investigation</th>${Object.values(COLUMNS).ma
   cards.filter(c => c.compare).map(c => `<tr><td>${c.compare.name}<small>${c.psi_id}</small></td>${Object.keys(COLUMNS).map(k => `<td>${c.compare[k]}</td>`).join("")}</tr>`).join("");
 showStage("overheating");
 
+// ==================== 01 RANKED FINDINGS ====================
+const ranked = await getJson("/api/findings").catch(e => (report("findings", e), null));
+if (ranked) {
+  const NAMES = { evidence: "Evidence", surprise: "Surprise", actionable: "Actionable" };
+  const dots = n => `<span class="dots" aria-label="${n} of 3">${[1, 2, 3].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</span>`;
+  $("#rank-method").innerHTML = Object.entries(NAMES).map(([k, name]) => `<li><b>${name}:</b> ${ranked.method[k]}</li>`).join("") + `<li>${ranked.method.note}</li>`;
+  $("#findings").innerHTML = ranked.findings.map(f => `
+    <li><span class="rank">${f.rank}</span>
+      <div><h4>${f.title}</h4><p>${f.detail}</p><p class="meaning">${f.safety_meaning}</p>
+        <small><b class="tag ${f.label.toLowerCase()}">${f.label}</b> ${f.source} · ${f.tests} tests · <a href="#${f.page}">see it →</a></small></div>
+      <dl>${Object.entries(NAMES).map(([k, name]) => `<div><dt>${name}</dt><dd>${dots(f.scores[k])}</dd></div>`).join("")}<div><dt>Score</dt><dd class="total">${f.total}<small>/9</small></dd></div></dl></li>`).join("");
+}
+
 // ==================== 02 MATERIALS ====================
 const matrix = await getJson("/api/matrix").catch(e => (report("matrix", e), null));
 if (matrix) try {
