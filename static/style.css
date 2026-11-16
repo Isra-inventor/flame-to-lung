@@ -232,3 +232,5 @@ button.next { background: none; border: 0; border-bottom: 1px solid var(--flame)
   background: #1a0d08; border: 1px solid var(--soot); color: #ffd9a8; font: 12px/1.5 var(--mono); white-space: pre-wrap; }
 .matrix th .tag { display: inline-block; vertical-align: middle; margin: 2px 0; }
 .matrix th { line-height: 1.9; }
+footer p + p { margin-top: 8px; color: var(--ink-2); }
+footer a { color: var(--flame); text-decoration: none; border-bottom: 1px solid var(--flame); }
