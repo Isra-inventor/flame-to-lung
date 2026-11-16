@@ -18,7 +18,7 @@ or a cited physics model.
 
     python -m venv .venv
     .venv/bin/pip install -r requirements.txt
-    cp .env.example .env          # put your OpenRouter key in LLM_API_KEY
+    .venv/bin/python assistant.py --setup # asks for your OpenRouter key, saves .env, tests it
     .venv/bin/python build_data.py        # downloads NASA files, rebuilds the tables
     .venv/bin/python -m pytest -q
     .venv/bin/python -m flask --app server run --host 0.0.0.0 --port 5000

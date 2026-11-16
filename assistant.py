@@ -117,17 +117,40 @@ SCHEMAS = [
 ]
 
 
+# ==================== CONNECT TO THE LLM ====================
+PLACEHOLDERS = {"", "put-your-key-here", "proxy-injected-placeholder"}
+
+
+def connect():
+    env_file = ROOT / ".env"
+    load_dotenv(env_file, override=True)
+    read = lambda name: os.environ.get(name, "").strip().strip("\"'")
+    key = next((read(n) for n in ["LLM_API_KEY", "OPENROUTER_API_KEY"] if read(n) not in PLACEHOLDERS), "")
+    if not key:
+        seen = "found, but LLM_API_KEY in it is empty or still the placeholder" if env_file.exists() else "missing"
+        raise RuntimeError(f"No API key. The file {env_file} is {seen}. In the terminal, from the project folder, run:  python assistant.py --setup")
+    client = OpenAI(base_url=read("LLM_BASE_URL") or "https://openrouter.ai/api/v1", api_key=key)
+    return client, read("LLM_MODEL") or "nvidia/nemotron-3.5-super-vl:free"
+
+
+def setup():
+    import getpass
+    key = getpass.getpass("Paste your OpenRouter key (it stays hidden), then press Enter: ").strip()
+    (ROOT / ".env").write_text(f"LLM_BASE_URL=https://openrouter.ai/api/v1\nLLM_API_KEY={key}\nLLM_MODEL=nvidia/nemotron-3.5-super-vl:free\n")
+    client, model = connect()
+    reply = client.chat.completions.create(model=model, messages=[{"role": "user", "content": "Say hello in five words."}])
+    print("Saved to .env. The model answered:", reply.choices[0].message.content)
+    print("Now restart the server.")
+
+
 # ==================== THE AGENT LOOP ====================
+
 def ask(question, history=None):
-    load_dotenv(override=True)
-    key = os.environ.get("LLM_API_KEY", "").strip().strip('"\'')
-    if not key or key == "put-your-key-here":
-        raise RuntimeError("No API key found. Open the .env file, set LLM_API_KEY=your OpenRouter key (no spaces or quotes), save, and restart the server.")
-    client = OpenAI(base_url=os.environ["LLM_BASE_URL"], api_key=key)
+    client, model = connect()
     messages = [{"role": "system", "content": SYSTEM_PROMPT}] + (history or []) + [{"role": "user", "content": question}]
     calls = []
     for _ in range(6):
-        reply = client.chat.completions.create(model=os.environ["LLM_MODEL"], messages=messages,
+        reply = client.chat.completions.create(model=model, messages=messages,
                                                tools=SCHEMAS, temperature=0.2).choices[0].message
         if not reply.tool_calls:
             return {"answer": reply.content, "tool_calls": calls}
@@ -154,8 +177,10 @@ DEMO_QUESTIONS = [
 ]
 
 if __name__ == "__main__":
-    load_dotenv()
-    lines = ["# Demo answers", f"Model: `{os.environ['LLM_MODEL']}`", ""]
+    import sys
+    if "--setup" in sys.argv:
+        sys.exit(setup())
+    lines = ["# Demo answers", f"Model: `{connect()[1]}`", ""]
     for q in DEMO_QUESTIONS:
         out = ask(q)
         used = ", ".join(f"{c['tool']}({json.dumps(c['args'])})" for c in out["tool_calls"])
