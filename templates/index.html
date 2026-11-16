@@ -34,29 +34,28 @@
         <div><dt>solid-fuel tests</dt><dd>{{ counts.bass + counts.bass2 }}</dd><small>BASS, BASS-II · PSI-26, 25</small></div>
         <div><dt>large-fire samples</dt><dd>{{ counts.saffire }}</dd><small>Saffire · PSI-98–100</small></div>
       </dl>
-      <div class="map" aria-label="Site map">
-        <p class="map-title">Where to go</p>
-        <div class="map-group">
-          <h3>See the evidence</h3><p>What NASA measured. Nothing predicted.</p>
-          <a href="#investigations"><i>01</i><b>Investigations</b>Each experiment: what was burned, how, and what it taught.</a>
-          <a href="#materials"><i>02</i><b>Materials</b>Which materials burn, which make dangerous smoke, where data is missing.</a>
-          <a href="#science"><i>03</i><b>Flame science</b>Fuels, diluent gases, cool flames and soot.</a>
-        </div>
-        <div class="map-group">
-          <h3>Run the models</h3><p>Change the conditions and watch the result.</p>
-          <a href="#simulator"><i>04</i><b>Flame simulator</b>Will the flame survive? What would make it safer?</a>
-          <a href="#lung"><i>05</i><b>Lung model</b>Where the smoke lands in a crew member's lungs.</a>
-        </div>
-        <div class="map-group">
-          <h3>Ask a question</h3><p>In plain language, with sources.</p>
-          <a href="#assistant"><i>06</i><b>Assistant</b>A chat that answers only from the data and the two models.</a>
-        </div>
-        <dl class="paths">
-          <div><dt>New to the topic?</dt><dd>Go 01 → 03 → 04 → 05, about five minutes.</dd></div>
-          <div><dt>Researcher?</dt><dd>Start at 03 for the measurements, then test conditions in 04.</dd></div>
-          <div><dt>Short on time?</dt><dd>Open 04, press "Moon base scenario", then ask the assistant why.</dd></div>
+      <div class="legend">
+        <p class="map-title">Three labels you will see on every page</p>
+        <dl>
+          <div><dt><b class="tag measured">Measured</b></dt><dd>A number taken straight from a NASA experiment table.</dd></div>
+          <div><dt><b class="tag modeled">Modeled</b></dt><dd>A number calculated by one of our two models from NASA's measurements.</dd></div>
+          <div><dt><b class="tag recommendation">Recommendation</b></dt><dd>Advice drawn from the numbers. It is a suggestion, not data.</dd></div>
         </dl>
       </div>
+
+      <nav class="route" aria-label="Site map">
+        <p class="map-title">The route through the site</p>
+        <div class="zones" aria-hidden="true"><span style="grid-column: span 3">See the evidence</span><span style="grid-column: span 2">Run the models</span><span>Ask</span></div>
+        <ol>
+          <li><a href="#investigations"><i>01</i><b>Investigations</b><span>What NASA burned in each experiment, and what it taught.</span><em><b class="tag measured">Measured</b></em></a></li>
+          <li><a href="#materials"><i>02</i><b>Materials</b><span>Which materials burn, which make dangerous smoke, and where data is missing.</span><em><b class="tag measured">Measured</b><b class="tag modeled">Modeled</b></em></a></li>
+          <li><a href="#science"><i>03</i><b>Flame science</b><span>Fuels, diluent gases, cool flames and soot.</span><em><b class="tag measured">Measured</b></em></a></li>
+          <li><a href="#simulator"><i>04</i><b>Flame simulator</b><span>Set the atmosphere. See if the flame survives and what would make it safer.</span><em><b class="tag modeled">Modeled</b><b class="tag recommendation">Recommendation</b></em></a></li>
+          <li><a href="#lung"><i>05</i><b>Lung model</b><span>Pick a smoke. See where it lands in a crew member's lungs.</span><em><b class="tag modeled">Modeled</b></em></a></li>
+          <li><a href="#assistant"><i>06</i><b>Assistant</b><span>Ask in plain language. It answers only from the data and the models.</span><em><b class="tag measured">Measured</b><b class="tag modeled">Modeled</b><b class="tag recommendation">Recommendation</b></em></a></li>
+        </ol>
+        <p class="note">Short on time? Open 04, press "Moon base scenario", then ask the assistant why.</p>
+      </nav>
     </section>
 
     <!-- ==================== 01 INVESTIGATIONS ==================== -->

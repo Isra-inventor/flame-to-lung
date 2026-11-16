@@ -150,18 +150,25 @@ details pre { max-height: 220px; overflow: auto; border: 1px solid var(--line); 
 footer { padding: 40px clamp(20px, 6vw, 96px) 60px; border-top: 1px solid var(--line); font: 12px/1.6 var(--mono); color: var(--ink-3); max-width: 1320px; }
 
 /* ==================== GUIDES, STEPS, PAGE LINKS ==================== */
-.map { margin-top: 48px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 3fr 2fr 1fr; gap: 0 36px; }
-.map-title { grid-column: 1 / -1; font: 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--flame); padding: 14px 0 4px; }
-.map-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 20px; align-content: start; position: relative; }
-.map-group h3 { grid-column: 1 / -1; font: 400 30px/1.1 var(--serif); }
-.map-group > p { grid-column: 1 / -1; color: var(--ink-3); font: 12px var(--mono); margin: 4px 0 14px; }
-.map-group + .map-group::before { content: "→"; position: absolute; left: -27px; top: 4px; color: var(--ink-3); font: 20px var(--mono); }
-.map-group a { display: block; border-top: 1px solid var(--line); padding: 12px 0 16px; color: var(--ink-2); text-decoration: none; font-size: 13px; line-height: 1.45; background: rgba(6, 8, 12, .55); }
-.map-group a i { display: block; font: 11px var(--mono); color: var(--flame); font-style: normal; }
-.map-group a b { display: block; font: 400 22px/1.15 var(--serif); color: var(--ink); margin: 4px 0 6px; }
-.map-group a:hover b { color: var(--flame); }
-.paths { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 36px; margin-top: 22px; border-top: 1px solid var(--line); padding-top: 12px; }
-.paths dd { font: 14px/1.5 var(--sans); color: var(--ink-2); margin-top: 4px; }
+.map-title { font: 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--flame); margin-bottom: 14px; }
+.legend { margin-top: 52px; border: 1px solid var(--line); background: rgba(6, 8, 12, .8); padding: 20px 24px 22px; }
+.legend dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 36px; }
+.legend dd { font: 16px/1.5 var(--sans); color: var(--ink); margin-top: 10px; }
+.legend .tag { font-size: 12px; padding: 4px 9px; }
+.route { margin-top: 52px; }
+.zones { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0 14px; }
+.zones span { font: 400 26px/1.1 var(--serif); color: var(--ink); border-bottom: 2px solid var(--flame); padding-bottom: 10px; }
+.zones span:nth-child(2) { border-color: var(--tb); }
+.zones span:nth-child(3) { border-color: var(--al); }
+.route ol { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0 14px; }
+.route li a { display: flex; flex-direction: column; height: 100%; padding: 18px 14px 18px; color: var(--ink-2); text-decoration: none;
+  background: rgba(6, 8, 12, .8); border: 1px solid var(--line); border-top: 0; transition: background .2s, border-color .2s; }
+.route li a:hover { background: rgba(111, 176, 255, .08); border-color: var(--flame); }
+.route i { font: 500 13px var(--mono); color: var(--flame); font-style: normal; }
+.route li a > b { font: 400 27px/1.1 var(--serif); color: var(--ink); margin: 8px 0 10px; }
+.route li a > span { font: 15px/1.5 var(--sans); color: var(--ink-2); flex: 1; }
+.route li em { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; font-style: normal; }
+.route li a::after { content: "open →"; font: 11px var(--mono); letter-spacing: .08em; color: var(--flame); margin-top: 14px; }
 .hero { justify-content: flex-start; padding-top: 9vh; }
 .guide { border: 1px solid var(--line); background: rgba(6, 8, 12, .78); padding: 14px 18px; margin: 0 0 32px; max-width: 92ch; font: inherit; color: var(--ink-2); }
 .guide summary { font: 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--flame); }
@@ -215,9 +222,7 @@ button.next { background: none; border: 0; border-bottom: 1px solid var(--flame)
   .lung-space { min-height: 320px; }
   .regions { grid-template-columns: 1fr; }
   .chapter { grid-template-columns: 1fr; }
-  .map, .paths { grid-template-columns: 1fr; }
-  .map-group + .map-group::before { content: none; }
-  .map-group { margin-top: 22px; }
+  .legend dl { grid-template-columns: 1fr; }
   .steps, .steps.three, .glossary, .tiles, .tile dl { grid-template-columns: 1fr; row-gap: 18px; }
   .flame-space { min-height: 240px; }
   .chapter p { grid-column: 1; }
@@ -234,3 +239,11 @@ button.next { background: none; border: 0; border-bottom: 1px solid var(--flame)
 .matrix th { line-height: 1.9; }
 footer p + p { margin-top: 8px; color: var(--ink-2); }
 footer a { color: var(--flame); text-decoration: none; border-bottom: 1px solid var(--flame); }
+@media (max-width: 1250px) {
+  .zones { display: none; }
+  .route ol { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .route li a { border-top: 1px solid var(--line); }
+}
+@media (max-width: 700px) { .route ol { grid-template-columns: 1fr; } }
+.route li { min-width: 0; }
+.route li em .tag { font-size: 10px; }
