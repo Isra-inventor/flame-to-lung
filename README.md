@@ -105,4 +105,4 @@ Not built: flame-video computer vision, toxic-gas modelling, LLM fine-tuning.
 
 ## Notes
 
-AI tools assisted with writing the code and text in this project. NASA does not endorse this project.
+AI tools assisted with web dev code and text in this project. 
